@@ -121,7 +121,7 @@
         <div class="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center text-center relative z-10">
             <h1 class="text-4xl md:text-5xl font-black font-serif tracking-widest uppercase text-gradient-gold-dark">Copa Central</h1>
             <h2 class="text-xl md:text-2xl font-bold font-serif tracking-[0.2em] uppercase text-gray-800 mt-2">Intercolegial</h2>
-            <p class="text-sm md:text-base text-gray-500 font-medium tracking-[0.3em] uppercase mt-4">Embarcación</p>
+            <p class="text-sm md:text-base text-gray-500 font-medium tracking-[0.3em] uppercase mt-4">Embarcación, Salta - 2026</p>
         </div>
     </header>
 
@@ -132,7 +132,7 @@
             <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col">
                 <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
                     <h2 class="text-lg font-bold font-serif text-gray-900 uppercase tracking-wide">Planilla de Inscripción</h2>
-                    <p class="text-sm text-gray-500 mt-1">Complete los datos de la escuela y los jugadores. Filas incompletas serán remarcadas en rojo.</p>
+                    <p class="text-sm text-gray-500 mt-1">Complete los datos del Colegio y los jugadores.</p>
                 </div>
 
                 <form id="registrationForm" class="flex flex-col">
@@ -158,7 +158,7 @@
                                 <tr>
                                     <th scope="col" class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-center w-12 border-r border-gray-200">Nº</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[250px]">Nombre y Apellido</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[150px]">DNI <span class="normal-case text-gray-400 font-normal">(8 dígitos max)</span></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[150px]">DNI</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[160px]">Fecha Nac.</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[180px]">Curso</th>
                                 </tr>
@@ -184,7 +184,7 @@
                                             class="w-full rounded-none border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm font-bold">
                                     </td>
                                     <td class="px-6 py-3">
-                                        <input type="text" value="DELEGADO OFICIAL" readonly disabled
+                                        <input type="text" value="DELEGADO" readonly disabled
                                             class="w-full rounded-none py-1 px-2 text-gray-500 bg-transparent text-sm font-black italic cursor-not-allowed">
                                     </td>
                                 </tr>
@@ -209,7 +209,7 @@
                 </button>
                 <div class="flex gap-3">
                     <button type="button" id="btnSendEmail" class="inline-flex items-center px-5 py-2 bg-blue-600 rounded-md text-sm font-bold uppercase text-white hover:bg-blue-700 transition-all shadow-sm">
-                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Enviar por Email
+                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar Equipo y Enviar por Email
                     </button>
                     <button type="button" onclick="window.print()" class="inline-flex items-center px-5 py-2 bg-gold-500 rounded-md text-sm font-bold uppercase text-white hover:bg-gold-700 transition-all shadow-sm">
                         <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Guardar PDF / Imprimir
@@ -232,7 +232,7 @@
         // ==========================================
         // CONFIGURACIÓN DE EMAIL
         // ==========================================
-        const CORREO_DESTINATARIO = "correo_del_club@ejemplo.com"; 
+        const CORREO_DESTINATARIO = "clubatleticocentraln@gmail.com"; 
         
         const formRowsContainer = document.getElementById('formRows');
         const registrationForm = document.getElementById('registrationForm');
@@ -411,7 +411,7 @@
         });
 
         // -----------------------------------------------------------------------------
-        // DISEÑO DE CARNET: REPLICA EXACTA DE IMAGEN 1000376641.jpg (Clonación Visual)
+        // DISEÑO DE CARNET
         // -----------------------------------------------------------------------------
         function renderCarnets(data, meta) {
             carnetsContainer.innerHTML = '';
@@ -517,7 +517,7 @@
                                     <!-- 3: DNI -->
                                     <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
                                         <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">
-                                            NÚMERO DE IDENTIDAD:
+                                            D.N.I:
                                         </div>
                                         <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">
                                             ${jugador.dni}
@@ -527,7 +527,7 @@
                                     <!-- 4: Escuela -->
                                     <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
                                         <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">
-                                            ESCUELA:
+                                            COLEGIO:
                                         </div>
                                         <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">
                                             ${meta.colegio} - ${jugador.curso}
@@ -537,7 +537,7 @@
                                     <!-- 5: Equipo -->
                                     <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
                                         <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">
-                                            NOMBRE DEL EQUIPO:
+                                            EQUIPO:
                                         </div>
                                         <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">
                                             ${meta.equipo}
