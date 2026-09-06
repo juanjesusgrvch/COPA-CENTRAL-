@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripciones - C.A. Central Norte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cuervo: { 50: '#f6f6f6', 800: '#1a1a1a', 900: '#0a0a0a' },
+                        gold: { 50: '#fcfaf5', 500: '#d4af37', 700: '#aa7c11', 900: '#785709' },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Cinzel', 'Georgia', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #f6f6f6; color: #1a1a1a; }
+
+        .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 4px; }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        .text-gradient-gold-dark {
+            background: linear-gradient(to bottom, #aa7c11 0%, #785709 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* LÓGICA DE PANTALLA FANTASMA / PDF A4 */
+        @media print {
+            @page { 
+                size: A4 portrait; 
+                margin: 0; 
+            }
+            body { 
+                background-color: white !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
+            header, #form-section, .no-print, #toast-container { 
+                display: none !important; 
+            }
+            #print-section { 
+                display: flex !important; 
+                flex-direction: column; 
+                align-items: center; 
+                width: 100%; 
+                position: static; 
+                background: white !important; 
+                padding: 0 !important; 
+            }
+            .a4-page {
+                margin: 0 !important; 
+                padding: 11mm 10mm !important; 
+                box-shadow: none !important; 
+                border: none !important; 
+                page-break-after: always; 
+                page-break-inside: avoid;
+            }
+        }
+        
+        /* HOJA A4 y GRID DE CARNETS */
+        .a4-page { 
+            width: 210mm; 
+            height: 297mm; 
+            background: white; 
+            padding: 11mm 10mm; 
+            display: grid; 
+            grid-template-columns: 95mm 95mm; 
+            grid-auto-rows: 55mm; 
+            gap: 0; 
+            box-sizing: border-box;
+        }
+
+        .carnet-wrapper {
+            width: 95mm; 
+            height: 55mm; 
+            box-sizing: border-box; 
+            border: 1px solid #e5e7eb; 
+            position: relative; 
+            overflow: hidden; 
+            background: white;
+        }
+        
+        .reverso-wrapper {
+            border: none;
+            background-color: transparent;
+            background-size: cover;
+            background-position: center;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+        .input-error { 
+            border-bottom-color: #ef4444 !important; 
+            background-color: #fef2f2 !important; 
+            animation: shake 0.3s ease-in-out; 
+        }
+        
+        /* Honey Pot Class */
+        .hp-field {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 0;
+            width: 0;
+            z-index: -1;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-gold-500 selection:text-white">
+
+    <header class="relative border-b-4 border-gold-500 bg-white shadow-sm py-10 overflow-hidden">
+        <!-- Holder para el Escudo. Queda oculto hasta que se cargue el Base64 y nunca sale impreso -->
+        <div class="absolute left-4 sm:left-10 top-1/2 -translate-y-1/2 z-20 no-print">
+            <img id="shield-preview" class="hidden w-16 h-16 sm:w-24 sm:h-24 object-contain" alt="Escudo Organización" />
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center text-center relative z-10">
+            <h1 class="text-4xl md:text-5xl font-black font-serif tracking-widest uppercase text-gradient-gold-dark">Copa Central</h1>
+            <h2 class="text-xl md:text-2xl font-bold font-serif tracking-[0.2em] uppercase text-gray-800 mt-2">Intercolegial</h2>
+            <p class="text-sm md:text-base text-gray-500 font-medium tracking-[0.3em] uppercase mt-4">Embarcación, Salta - 2026</p>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <div id="form-section">
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col">
+                <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
+                    <h2 class="text-lg font-bold font-serif text-gray-900 uppercase tracking-wide">Planilla de Inscripción</h2>
+                    <p class="text-sm text-gray-500 mt-1">Complete los datos del Colegio y los jugadores.</p>
+                </div>
+
+                <form id="registrationForm" class="flex flex-col">
+                    
+                    <!-- HONEY POT: Totalmente invisible para UX, trampa para bots -->
+                    <input type="text" id="honey_pot_field" name="website_url" class="hp-field" tabindex="-1" autocomplete="off">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-b border-gray-100 bg-white">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 uppercase mb-2">Nombre del Equipo</label>
+                            <input type="text" id="inputEquipo" required placeholder="Ej: LOS LEONES FC" oninput="this.value = this.value.toUpperCase()"
+                                class="w-full border-b-2 border-gray-300 py-2 focus:outline-none focus:border-gold-500 font-medium transition-colors bg-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 uppercase mb-2">Colegio</label>
+                            <input type="text" id="inputColegio" required placeholder="Ej: COLEGIO NACIONAL" oninput="this.value = this.value.toUpperCase()"
+                                class="w-full border-b-2 border-gray-300 py-2 focus:outline-none focus:border-gold-500 font-medium transition-colors bg-transparent">
+                        </div>
+                    </div>
+
+                    <div class="table-container overflow-x-auto w-full">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-center w-12 border-r border-gray-200">Nº</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[250px]">Nombre y Apellido</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[150px]">DNI</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[160px]">Fecha Nac.</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[180px]">Curso</th>
+                                </tr>
+                            </thead>
+                            <tbody id="formRows" class="bg-white divide-y divide-gray-100">
+                            </tbody>
+                            <tbody class="bg-gray-100 border-t-2 border-gray-300">
+                                <tr>
+                                    <td class="px-4 py-4 text-xs font-black font-serif text-gray-700 text-center border-r border-gray-200 bg-gray-200">DEL</td>
+                                    <td class="px-6 py-3">
+                                        <input type="text" id="nombre_del" placeholder="Nombre del Delegado" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').toUpperCase()"
+                                            class="w-full rounded-none border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm font-bold placeholder:font-normal">
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <input type="text" id="dni_del" maxlength="8" placeholder="DNI" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                            class="w-full rounded-none border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm font-mono font-bold placeholder:font-normal">
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <input type="date" id="fecha_del" 
+                                            class="w-full rounded-none border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm font-bold">
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <input type="text" value="DELEGADO" readonly disabled
+                                            class="w-full rounded-none py-1 px-2 text-gray-500 bg-transparent text-sm font-black italic cursor-not-allowed">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Configuración Avanzada / Holders Base64 -->
+                    <div class="px-6 py-4 bg-white border-t border-gray-200">
+                        <details class="group cursor-pointer">
+                            <summary class="flex items-center text-sm font-bold text-gray-500 uppercase tracking-wide hover:text-gold-700 transition-colors list-none">
+                                <i data-lucide="settings" class="w-4 h-4 mr-2"></i> Configuración Visual Adicional (Opcional)
+                            </summary>
+                            <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4 cursor-default">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Link Base64 - Escudo Org.</label>
+                                    <input type="text" id="configShield" placeholder="data:image/png;base64,..." class="w-full text-xs p-2 border border-gray-200 rounded focus:border-gold-500 focus:outline-none font-mono text-gray-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Link Base64 - Reverso Carnet</label>
+                                    <input type="text" id="configBack" placeholder="data:image/png;base64,..." class="w-full text-xs p-2 border border-gray-200 rounded focus:border-gold-500 focus:outline-none font-mono text-gray-500">
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                    
+                    <div class="px-6 py-5 bg-gray-50 border-t border-gray-200 flex justify-end">
+                        <button type="submit" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-cuervo-900 hover:bg-cuervo-800 focus:outline-none shadow-sm transition-colors duration-200">
+                            <i data-lucide="layout-grid" class="w-5 h-5 mr-2"></i> Revisar y Generar Carnets
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="print-section" class="hidden flex-col items-center w-full bg-cuervo-900 min-h-screen py-10">
+            <div class="w-full max-w-[210mm] flex justify-between items-center mb-6 no-print gap-4 flex-wrap bg-white p-4 rounded-lg shadow-lg">
+                <button type="button" id="btnBackToForm" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-bold uppercase text-gray-700 hover:bg-gray-50 transition-all">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Editar Datos
+                </button>
+                <div class="flex gap-3">
+                    <button type="button" id="btnSendEmail" class="inline-flex items-center px-5 py-2 bg-blue-600 rounded-md text-sm font-bold uppercase text-white hover:bg-blue-700 transition-all shadow-sm">
+                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar Equipo y Enviar por Email
+                    </button>
+                    <!-- Nueva lógica de botón print con renombramiento dinámico -->
+                    <button type="button" id="btnExportPDF" class="inline-flex items-center px-5 py-2 bg-gold-500 rounded-md text-sm font-bold uppercase text-white hover:bg-gold-700 transition-all shadow-sm">
+                        <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Guardar PDF / Imprimir
+                    </button>
+                </div>
+            </div>
+            
+            <div id="carnetsContainer" class="w-full flex flex-col items-center pb-10">
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        lucide.createIcons();
+
+        const CORREO_DESTINATARIO = "clubatleticocentraln@gmail.com"; 
+        
+        const formRowsContainer = document.getElementById('formRows');
+        const registrationForm = document.getElementById('registrationForm');
+        const formSection = document.getElementById('form-section');
+        const printSection = document.getElementById('print-section');
+        const carnetsContainer = document.getElementById('carnetsContainer');
+        const btnBackToForm = document.getElementById('btnBackToForm');
+        const btnSendEmail = document.getElementById('btnSendEmail');
+        const btnExportPDF = document.getElementById('btnExportPDF');
+
+        const inputEquipo = document.getElementById('inputEquipo');
+        const inputColegio = document.getElementById('inputColegio');
+        const configShield = document.getElementById('configShield');
+        const shieldPreview = document.getElementById('shield-preview');
+        const configBack = document.getElementById('configBack');
+        const hpField = document.getElementById('honey_pot_field');
+
+        const TOTAL_ROWS = 16;
+        let validData = []; 
+        let metadata = {};
+
+        // Escuchar carga de base 64 de Escudo
+        configShield.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if(val) {
+                shieldPreview.src = val;
+                shieldPreview.classList.remove('hidden');
+            } else {
+                shieldPreview.classList.add('hidden');
+            }
+        });
+
+        function generateRows() {
+            let html = '';
+            for (let i = 1; i <= TOTAL_ROWS; i++) {
+                const bgClass = i % 2 === 0 ? 'bg-gray-50/50' : 'bg-white';
+                const onInputName = "this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]/g, '').toUpperCase()";
+                const onInputDni = "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)";
+                const onInputCourse = "this.value = this.value.replace(/[^a-zA-Z0-9\\sñÑ]/g, '').toUpperCase()";
+
+                html += `
+                    <tr class="${bgClass} hover:bg-gold-50/30 transition-colors">
+                        <td class="px-4 py-3 text-sm font-bold font-serif text-gray-400 text-center border-r border-gray-100">${i}</td>
+                        <td class="px-6 py-2">
+                            <input type="text" name="nombre_${i}" oninput="${onInputName}"
+                                class="row-input w-full rounded-none border-b border-gray-200 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm font-medium transition-colors">
+                        </td>
+                        <td class="px-6 py-2">
+                            <input type="text" name="dni_${i}" maxlength="8" oninput="${onInputDni}"
+                                class="row-input w-full rounded-none border-b border-gray-200 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm font-mono tracking-wider transition-colors">
+                        </td>
+                        <td class="px-6 py-2">
+                            <input type="date" name="fecha_${i}" 
+                                class="row-input w-full rounded-none border-b border-gray-200 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm transition-colors">
+                        </td>
+                        <td class="px-6 py-2">
+                            <input type="text" name="curso_${i}" maxlength="15" oninput="${onInputCourse}"
+                                class="row-input w-full rounded-none border-b border-gray-200 py-1 px-2 text-gray-900 bg-transparent focus:border-gold-500 focus:outline-none text-sm font-medium transition-colors">
+                        </td>
+                    </tr>
+                `;
+            }
+            formRowsContainer.innerHTML = html;
+        }
+
+        generateRows();
+
+        function showToast(message, type = 'warning') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-green-600' : 'bg-gray-800');
+            const icon = type === 'error' ? 'alert-circle' : 'info';
+            
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-md shadow-lg flex items-center text-sm font-medium transition-opacity duration-300 transform translate-y-0 opacity-100`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 mr-2"></i> ${message}`;
+            
+            document.getElementById('toast-container').appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.replace('opacity-100', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4500);
+        }
+
+        registrationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Validación Honeypot
+            if (hpField.value.trim() !== "") {
+                console.warn("Spam detectado. Transacción abortada.");
+                return;
+            }
+            
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+            
+            validData = [];
+            metadata = {
+                equipo: inputEquipo.value.trim(),
+                colegio: inputColegio.value.trim()
+            };
+            
+            let hasIncompleteRows = false;
+            let rowsWithAnyData = 0;
+            let hasAgeError = false;
+
+            for (let i = 1; i <= TOTAL_ROWS; i++) {
+                const iNombre = document.querySelector(`input[name="nombre_${i}"]`);
+                const iDni = document.querySelector(`input[name="dni_${i}"]`);
+                const iFecha = document.querySelector(`input[name="fecha_${i}"]`);
+                const iCurso = document.querySelector(`input[name="curso_${i}"]`);
+
+                const vNombre = iNombre.value.trim();
+                const vDni = iDni.value.trim();
+                const vFecha = iFecha.value;
+                const vCurso = iCurso.value.trim();
+
+                const filledCount = [vNombre, vDni, vFecha, vCurso].filter(v => v !== '').length;
+
+                if (filledCount > 0) {
+                    rowsWithAnyData++;
+                    if (filledCount < 4) {
+                        hasIncompleteRows = true;
+                        if (!vNombre) iNombre.classList.add('input-error');
+                        if (!vDni) iDni.classList.add('input-error');
+                        if (!vFecha) iFecha.classList.add('input-error');
+                        if (!vCurso) iCurso.classList.add('input-error');
+                    } else {
+                        const yearInt = parseInt(vFecha.split('-')[0], 10);
+                        if (yearInt >= 2016) {
+                            hasAgeError = true;
+                            iFecha.classList.add('input-error');
+                            showToast(`Fila ${i}: eres demasiado joven para jugar este campeonato. Lo sentimos`, "error");
+                        } else if (yearInt <= 2007) {
+                            hasAgeError = true;
+                            iFecha.classList.add('input-error');
+                            showToast(`Fila ${i}: eres demasiado viejo para jugar este campeonato. Lo sentimos`, "error");
+                        } else {
+                            validData.push({ i, nombre: vNombre, dni: vDni, fecha: vFecha, curso: vCurso, isDelegate: false });
+                        }
+                    }
+                }
+            }
+
+            const delNombre = document.getElementById('nombre_del');
+            const delDni = document.getElementById('dni_del');
+            const delFecha = document.getElementById('fecha_del');
+            
+            const vDelNombre = delNombre.value.trim();
+            const vDelDni = delDni.value.trim();
+            const vDelFecha = delFecha.value;
+            
+            const delFilledCount = [vDelNombre, vDelDni, vDelFecha].filter(v => v !== '').length;
+
+            if (delFilledCount > 0) {
+                rowsWithAnyData++;
+                if (delFilledCount < 3) {
+                    hasIncompleteRows = true;
+                    if (!vDelNombre) delNombre.classList.add('input-error');
+                    if (!vDelDni) delDni.classList.add('input-error');
+                    if (!vDelFecha) delFecha.classList.add('input-error');
+                } else {
+                    validData.push({ i: 'DEL', nombre: vDelNombre, dni: vDelDni, fecha: vDelFecha, curso: 'DELEGADO', isDelegate: true });
+                }
+            }
+
+            if (hasAgeError) return; 
+            if (rowsWithAnyData === 0) {
+                showToast("La planilla está vacía. Complete al menos un jugador o el delegado.", "error");
+                return;
+            }
+            if (hasIncompleteRows) {
+                showToast("Hay filas incompletas resaltadas en rojo. Llene todos los datos de esa fila.", "error");
+                return;
+            }
+
+            renderCarnets(validData, metadata);
+            formSection.classList.add('hidden');
+            printSection.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        btnBackToForm.addEventListener('click', () => {
+            printSection.classList.add('hidden');
+            formSection.classList.remove('hidden');
+        });
+
+        // Evento custom para exportar PDF con nombre dinámico
+        btnExportPDF.addEventListener('click', () => {
+            const originalTitle = document.title;
+            // Modifica el título de forma temporal; los navegadores lo absorben como nombre de archivo
+            document.title = `${metadata.equipo} Carnets 2026`;
+            window.print();
+            // Restablece para mantener la pulcritud de la pestaña
+            setTimeout(() => { document.title = originalTitle; }, 500);
+        });
+
+        function renderCarnets(data, meta) {
+            carnetsContainer.innerHTML = '';
+            
+            const ITEMS_PER_PAGE = 10; 
+            const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+            const backBase64 = configBack.value.trim();
+
+            for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                
+                // --- CONSTRUCCIÓN FRENTE DEL CARNET ---
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'a4-page shadow-2xl mb-12'; 
+
+                const startIdx = pageIndex * ITEMS_PER_PAGE;
+                const pageData = data.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+                pageData.forEach((jugador) => {
+                    const [y, m, d] = jugador.fecha.split('-');
+                    const fechaFormateada = `${d}/${m}/${y}`;
+                    const displayNombre = jugador.isDelegate ? `${jugador.nombre} (DEL)` : jugador.nombre;
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'carnet-wrapper';
+                    
+                    wrapper.innerHTML = `
+                        <!-- Elementos gráficos de fondo mantenidos idénticos al código base -->
+                        <div class="absolute top-0 left-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(-45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 0 100%);"></div>
+                        <div class="absolute top-0 right-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 100% 100%);"></div>
+                        <div class="absolute bottom-0 left-0 w-[18mm] h-[18mm] z-0 flex">
+                            <div class="absolute bottom-0 left-0 w-[8mm] h-[8mm] bg-[#7B1220]"></div>
+                            <div class="absolute bottom-0 left-[2mm] w-[16mm] h-[16mm]" style="background: repeating-linear-gradient(45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 100%, 100% 100%, 0 0);"></div>
+                        </div>
+
+                        <div class="relative z-10 flex flex-col h-full w-full p-[3mm]">
+                            <div class="flex items-center justify-center w-full mb-[2mm]">
+                                <h3 class="font-sans font-black uppercase text-[11px] leading-none tracking-tight text-[#7B1220]">
+                                    COPA CENTRAL: INTERCOLEGIAL
+                                </h3>
+                            </div>
+
+                            <div class="flex flex-1 w-full gap-[2.5mm]">
+                                <div class="w-[30%] aspect-square shrink-0 self-center flex flex-col relative bg-[#7B1220] shadow-[0_3px_5px_rgba(0,0,0,0.5)] overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-[150%] h-[150%] bg-gradient-to-br from-black/60 via-transparent to-transparent pointer-events-none -translate-x-[20%] -translate-y-[20%]"></div>
+                                    <div class="absolute -bottom-[8mm] -right-[8mm] w-[22mm] h-[22mm] bg-white transform rotate-45 z-0"></div>
+                                    <div class="flex-1 w-full flex items-center justify-center relative z-10 pt-[2.5mm] pb-[1mm]">
+                                        <svg viewBox="0 0 100 100" class="w-[85%] h-[85%] overflow-visible">
+                                            <circle cx="50" cy="50" r="44" fill="none" stroke="white" stroke-width="3"/>
+                                            <circle cx="50" cy="35" r="15" fill="#7B1220" stroke="white" stroke-width="3"/>
+                                            <path d="M 21 78 C 21 55, 79 55, 79 78 C 79 80, 21 80, 21 78 Z" fill="#7B1220" stroke="white" stroke-width="3" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <div class="w-[85%] mx-auto bg-white text-center py-[1mm] relative z-20 shadow-sm mb-[1mm]">
+                                        <span class="text-[4.5px] font-black text-[#7B1220] tracking-wider block leading-none">FOTO 4x4</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="w-[70%] flex flex-col justify-between h-full space-y-[1.5mm]">
+                                    <!-- Campos extraídos del iterador original -->
+                                    <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
+                                        <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">NOMBRE:</div>
+                                        <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${displayNombre}</div>
+                                    </div>
+                                    <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
+                                        <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">FECHA DE NACIMIENTO:</div>
+                                        <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${fechaFormateada}</div>
+                                    </div>
+                                    <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
+                                        <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">D.N.I:</div>
+                                        <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${jugador.dni}</div>
+                                    </div>
+                                    <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
+                                        <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">COLEGIO:</div>
+                                        <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${meta.colegio} - ${jugador.curso}</div>
+                                    </div>
+                                    <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
+                                        <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">EQUIPO:</div>
+                                        <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${meta.equipo}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    pageDiv.appendChild(wrapper);
+                });
+
+                carnetsContainer.appendChild(pageDiv);
+
+                // --- CONSTRUCCIÓN REVERSO DEL CARNET (Si existe holder base64) ---
+                if (backBase64) {
+                    const backPageDiv = document.createElement('div');
+                    // Usamos las mismas clases de la hoja principal para respetar los paddings
+                    backPageDiv.className = 'a4-page shadow-2xl mb-12'; 
+
+                    // Lógica de impresión Dúplex (Doble Faz): Se invierten las columnas por fila
+                    // Iteramos en pares (Grilla de 2 columnas)
+                    for (let i = 0; i < pageData.length; i += 2) {
+                        const rightCardData = pageData[i + 1]; // El carnet que en el frente estaba a la derecha
+                        
+                        // Si existe un carnet a la derecha en el frente, su reverso debe ir a la izquierda
+                        if (rightCardData) {
+                            backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${backBase64}');"></div>`;
+                        } else {
+                            // Placeholder transparente para mantener la alineación de la grilla en CSS
+                            backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
+                        }
+                        
+                        // El reverso del carnet que en el frente estaba a la izquierda (siempre existe si entró al for), va a la derecha en el reverso
+                        backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${backBase64}');"></div>`;
+                    }
+                    
+                    carnetsContainer.appendChild(backPageDiv);
+                }
+            }
+            lucide.createIcons(); 
+        }
+
+        function generateMarkdown(data, meta) {
+            let md = `## Solicitud de Inscripción - C.A. Central Norte\n\n`;
+            md += `**Equipo:** ${meta.equipo}\n`;
+            md += `**Colegio:** ${meta.colegio}\n`;
+            md += `*Fecha de generación: ${new Date().toLocaleDateString()}*\n\n`;
+            
+            md += `| Fila | Nombre y Apellido | DNI | Fecha Nac. | Curso/Cat. |\n`;
+            md += `| :---: | :--- | :--- | :--- | :--- |\n`;
+            
+            data.forEach(row => {
+                const filaStr = row.isDelegate ? 'DEL' : row.i;
+                md += `| ${filaStr} | ${row.nombre} | ${row.dni} | ${row.fecha} | ${row.curso} |\n`;
+            });
+            return md;
+        }
+
+        btnSendEmail.addEventListener('click', () => {
+            const markdownString = generateMarkdown(validData, metadata);
+            const subject = encodeURIComponent(`Inscripción: ${metadata.equipo} - ${metadata.colegio}`);
+            const body = encodeURIComponent(markdownString);
+            window.location.href = `mailto:${CORREO_DESTINATARIO}?subject=${subject}&body=${body}`;
+        });
+
+    </script>
+</body>
+</html>
