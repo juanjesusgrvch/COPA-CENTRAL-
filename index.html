@@ -134,14 +134,12 @@
 
 <body class="min-h-screen flex flex-col selection:bg-gold-500 selection:text-white">
 
-    <header class="relative border-b-4 border-gold-500 bg-white shadow-sm py-10 overflow-hidden">
-        <!-- Holder para el Escudo. Queda oculto hasta que se cargue el Base64 y nunca sale impreso -->
-        <div class="absolute left-4 sm:left-10 top-1/2 -translate-y-1/2 z-20 no-print">
-            <img id="shield-preview" class="hidden w-16 h-16 sm:w-24 sm:h-24 object-contain" alt="Escudo Organización" />
-        </div>
+    <header class="relative border-b-4 border-gold-500 bg-white shadow-sm py-12 overflow-hidden">
+        <!-- Holder Dinámico del Escudo (Marca de agua sutil en el header) -->
+        <img id="shield-watermark" class="hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 object-contain opacity-5 pointer-events-none no-print transition-opacity duration-500" alt="Escudo Organización" />
         
-        <div class="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center text-center relative z-10">
-            <h1 class="text-4xl md:text-5xl font-black font-serif tracking-widest uppercase text-gradient-gold-dark">Copa Central</h1>
+        <div class="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center text-center relative z-10 pointer-events-none">
+            <h1 class="text-4xl md:text-5xl font-black font-serif tracking-widest uppercase text-gradient-gold-dark drop-shadow-sm">Copa Central</h1>
             <h2 class="text-xl md:text-2xl font-bold font-serif tracking-[0.2em] uppercase text-gray-800 mt-2">Intercolegial</h2>
             <p class="text-sm md:text-base text-gray-500 font-medium tracking-[0.3em] uppercase mt-4">Embarcación, Salta - 2026</p>
         </div>
@@ -210,29 +208,11 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Configuración Avanzada / Holders Base64 -->
-                    <div class="px-6 py-4 bg-white border-t border-gray-200">
-                        <details class="group cursor-pointer">
-                            <summary class="flex items-center text-sm font-bold text-gray-500 uppercase tracking-wide hover:text-gold-700 transition-colors list-none">
-                                <i data-lucide="settings" class="w-4 h-4 mr-2"></i> Configuración Visual Adicional (Opcional)
-                            </summary>
-                            <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4 cursor-default">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Link Base64 - Escudo Org.</label>
-                                    <input type="text" id="configShield" placeholder="data:image/png;base64,..." class="w-full text-xs p-2 border border-gray-200 rounded focus:border-gold-500 focus:outline-none font-mono text-gray-500">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Link Base64 - Reverso Carnet</label>
-                                    <input type="text" id="configBack" placeholder="data:image/png;base64,..." class="w-full text-xs p-2 border border-gray-200 rounded focus:border-gold-500 focus:outline-none font-mono text-gray-500">
-                                </div>
-                            </div>
-                        </details>
-                    </div>
                     
-                    <div class="px-6 py-5 bg-gray-50 border-t border-gray-200 flex justify-end">
-                        <button type="submit" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-cuervo-900 hover:bg-cuervo-800 focus:outline-none shadow-sm transition-colors duration-200">
-                            <i data-lucide="layout-grid" class="w-5 h-5 mr-2"></i> Revisar y Generar Carnets
+                    <!-- BOTÓN CTA (Center) -->
+                    <div class="px-6 py-8 bg-gray-50 border-t border-gray-200 flex justify-center">
+                        <button type="submit" class="inline-flex items-center justify-center w-full sm:w-auto px-10 py-4 border-2 border-cuervo-900 text-lg font-bold tracking-wide rounded-lg text-white bg-cuervo-900 hover:bg-cuervo-800 hover:border-cuervo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 shadow-lg transition-all duration-300 uppercase">
+                            <i data-lucide="layout-grid" class="w-6 h-6 mr-3"></i> Revisar y Generar Carnets
                         </button>
                     </div>
                 </form>
@@ -246,11 +226,10 @@
                 </button>
                 <div class="flex gap-3">
                     <button type="button" id="btnSendEmail" class="inline-flex items-center px-5 py-2 bg-blue-600 rounded-md text-sm font-bold uppercase text-white hover:bg-blue-700 transition-all shadow-sm">
-                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar Equipo y Enviar por Email
+                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar y Enviar Email
                     </button>
-                    <!-- Nueva lógica de botón print con renombramiento dinámico -->
                     <button type="button" id="btnExportPDF" class="inline-flex items-center px-5 py-2 bg-gold-500 rounded-md text-sm font-bold uppercase text-white hover:bg-gold-700 transition-all shadow-sm">
-                        <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Guardar PDF / Imprimir
+                        <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Imprimir Doble Faz
                     </button>
                 </div>
             </div>
@@ -265,6 +244,16 @@
     <script>
         lucide.createIcons();
 
+        // =========================================================================
+        // ⚙️ CONFIGURACIÓN DE IMÁGENES (RUTAS RELATIVAS DEL REPOSITORIO)
+        // =========================================================================
+        
+        // Al estar los archivos en la misma carpeta del repositorio, llamamos a su nombre exacto.
+        const URL_ESCUDO = "./ESCUDO.png";
+        const URL_REVERSO = "./CARNETDEJUGADOR.png";
+
+        // =========================================================================
+
         const CORREO_DESTINATARIO = "clubatleticocentraln@gmail.com"; 
         
         const formRowsContainer = document.getElementById('formRows');
@@ -278,25 +267,18 @@
 
         const inputEquipo = document.getElementById('inputEquipo');
         const inputColegio = document.getElementById('inputColegio');
-        const configShield = document.getElementById('configShield');
-        const shieldPreview = document.getElementById('shield-preview');
-        const configBack = document.getElementById('configBack');
         const hpField = document.getElementById('honey_pot_field');
+        const shieldWatermark = document.getElementById('shield-watermark');
 
         const TOTAL_ROWS = 16;
         let validData = []; 
         let metadata = {};
 
-        // Escuchar carga de base 64 de Escudo
-        configShield.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            if(val) {
-                shieldPreview.src = val;
-                shieldPreview.classList.remove('hidden');
-            } else {
-                shieldPreview.classList.add('hidden');
-            }
-        });
+        // Inyectar el escudo como marca de agua
+        if (URL_ESCUDO.trim() !== "") {
+            shieldWatermark.src = URL_ESCUDO;
+            shieldWatermark.classList.remove('hidden');
+        }
 
         function generateRows() {
             let html = '';
@@ -397,11 +379,11 @@
                         if (yearInt >= 2016) {
                             hasAgeError = true;
                             iFecha.classList.add('input-error');
-                            showToast(`Fila ${i}: eres demasiado joven para jugar este campeonato. Lo sentimos`, "error");
+                            showToast(`Fila ${i}: edad no permitida para el campeonato.`, "error");
                         } else if (yearInt <= 2007) {
                             hasAgeError = true;
                             iFecha.classList.add('input-error');
-                            showToast(`Fila ${i}: eres demasiado viejo para jugar este campeonato. Lo sentimos`, "error");
+                            showToast(`Fila ${i}: edad no permitida para el campeonato.`, "error");
                         } else {
                             validData.push({ i, nombre: vNombre, dni: vDni, fecha: vFecha, curso: vCurso, isDelegate: false });
                         }
@@ -452,13 +434,10 @@
             formSection.classList.remove('hidden');
         });
 
-        // Evento custom para exportar PDF con nombre dinámico
         btnExportPDF.addEventListener('click', () => {
             const originalTitle = document.title;
-            // Modifica el título de forma temporal; los navegadores lo absorben como nombre de archivo
             document.title = `${metadata.equipo} Carnets 2026`;
             window.print();
-            // Restablece para mantener la pulcritud de la pestaña
             setTimeout(() => { document.title = originalTitle; }, 500);
         });
 
@@ -467,7 +446,6 @@
             
             const ITEMS_PER_PAGE = 10; 
             const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
-            const backBase64 = configBack.value.trim();
 
             for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 
@@ -487,7 +465,6 @@
                     wrapper.className = 'carnet-wrapper';
                     
                     wrapper.innerHTML = `
-                        <!-- Elementos gráficos de fondo mantenidos idénticos al código base -->
                         <div class="absolute top-0 left-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(-45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 0 100%);"></div>
                         <div class="absolute top-0 right-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 100% 100%);"></div>
                         <div class="absolute bottom-0 left-0 w-[18mm] h-[18mm] z-0 flex">
@@ -519,7 +496,6 @@
                                 </div>
                                 
                                 <div class="w-[70%] flex flex-col justify-between h-full space-y-[1.5mm]">
-                                    <!-- Campos extraídos del iterador original -->
                                     <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
                                         <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">NOMBRE:</div>
                                         <div class="text-[#7B1220] text-[5px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${displayNombre}</div>
@@ -549,27 +525,21 @@
 
                 carnetsContainer.appendChild(pageDiv);
 
-                // --- CONSTRUCCIÓN REVERSO DEL CARNET (Si existe holder base64) ---
-                if (backBase64) {
+                // --- CONSTRUCCIÓN REVERSO DEL CARNET ---
+                if (URL_REVERSO.trim() !== "") {
                     const backPageDiv = document.createElement('div');
-                    // Usamos las mismas clases de la hoja principal para respetar los paddings
                     backPageDiv.className = 'a4-page shadow-2xl mb-12'; 
 
-                    // Lógica de impresión Dúplex (Doble Faz): Se invierten las columnas por fila
-                    // Iteramos en pares (Grilla de 2 columnas)
                     for (let i = 0; i < pageData.length; i += 2) {
-                        const rightCardData = pageData[i + 1]; // El carnet que en el frente estaba a la derecha
+                        const rightCardData = pageData[i + 1]; 
                         
-                        // Si existe un carnet a la derecha en el frente, su reverso debe ir a la izquierda
                         if (rightCardData) {
-                            backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${backBase64}');"></div>`;
+                            backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
                         } else {
-                            // Placeholder transparente para mantener la alineación de la grilla en CSS
                             backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
                         }
                         
-                        // El reverso del carnet que en el frente estaba a la izquierda (siempre existe si entró al for), va a la derecha en el reverso
-                        backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${backBase64}');"></div>`;
+                        backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
                     }
                     
                     carnetsContainer.appendChild(backPageDiv);
@@ -578,26 +548,34 @@
             lucide.createIcons(); 
         }
 
-        function generateMarkdown(data, meta) {
-            let md = `## Solicitud de Inscripción - C.A. Central Norte\n\n`;
-            md += `**Equipo:** ${meta.equipo}\n`;
-            md += `**Colegio:** ${meta.colegio}\n`;
-            md += `*Fecha de generación: ${new Date().toLocaleDateString()}*\n\n`;
+        function generateEmailPlainText(data, meta) {
+            let text = `INSCRIPCIÓN: C.A. CENTRAL NORTE\r\n`;
+            text += `========================================\r\n\r\n`;
+            text += `EQUIPO:  ${meta.equipo}\r\n`;
+            text += `COLEGIO: ${meta.colegio}\r\n`;
+            text += `FECHA:   ${new Date().toLocaleDateString()}\r\n\r\n`;
             
-            md += `| Fila | Nombre y Apellido | DNI | Fecha Nac. | Curso/Cat. |\n`;
-            md += `| :---: | :--- | :--- | :--- | :--- |\n`;
+            text += `----------------------------------------\r\n`;
+            text += `LISTA DE JUGADORES\r\n`;
+            text += `----------------------------------------\r\n\r\n`;
             
             data.forEach(row => {
-                const filaStr = row.isDelegate ? 'DEL' : row.i;
-                md += `| ${filaStr} | ${row.nombre} | ${row.dni} | ${row.fecha} | ${row.curso} |\n`;
+                const filaStr = row.isDelegate ? 'DEL ' : `Nº ${row.i}`;
+                text += `[ ${filaStr} ] ${row.nombre}\r\n`;
+                text += `    DNI:   ${row.dni}\r\n`;
+                text += `    Nac:   ${row.fecha}\r\n`;
+                text += `    Curso: ${row.curso}\r\n\r\n`;
             });
-            return md;
+            
+            text += `========================================\r\n`;
+            return text;
         }
 
         btnSendEmail.addEventListener('click', () => {
-            const markdownString = generateMarkdown(validData, metadata);
+            const plainTextBody = generateEmailPlainText(validData, metadata);
             const subject = encodeURIComponent(`Inscripción: ${metadata.equipo} - ${metadata.colegio}`);
-            const body = encodeURIComponent(markdownString);
+            const body = encodeURIComponent(plainTextBody);
+            
             window.location.href = `mailto:${CORREO_DESTINATARIO}?subject=${subject}&body=${body}`;
         });
 
