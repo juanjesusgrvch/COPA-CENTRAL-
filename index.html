@@ -850,11 +850,11 @@
             let text = `¡Hola! Adjunto la planilla de inscripción.\r\n\r\n`;
             text += `=================================================\r\n\r\n`;
             
-            text += `${metadata.equipo} - ${metadata.colegio}`
-            text += `Nº;NOMBRE Y APELLIDO;DNI;FECHA NAC.;CURSO\r\n`;
+            text += `${metadata.equipo} - ${metadata.colegio}`;
+            text += `NOMBRE Y APELLIDO;DNI;FECHA NAC.;CURSO\r\n`;
             data.forEach(row => {
                 const filaStr = row.isDelegate ? 'DELEGADO' : row.i;
-                text += `${meta.equipo};${meta.colegio};${filaStr};${row.nombre};${row.dni};${row.fecha};${row.curso}\r\n`;
+                text += `${filaStr};${row.nombre};${row.dni};${row.fecha};${row.curso}\r\n`;
             });
             return text;
         }
