@@ -45,7 +45,7 @@
             background-clip: text;
         }
 
-        /* LÓGICA DE IMPRESIÓN */
+        /* LÓGICA DE IMPRESIÓN Y SUPRESIÓN DE MARCA DE AGUA DEL NAVEGADOR */
         @media print {
             @page { 
                 size: A4 portrait; 
@@ -53,7 +53,7 @@
             }
             html, body { 
                 width: 210mm;
-                min-height: 297mm;
+                height: 297mm;
                 margin: 0 !important; 
                 padding: 0 !important;
                 background-color: white !important; 
@@ -72,12 +72,6 @@
                 background: white !important; 
                 padding: 0 !important; 
             }
-            
-            /* CLASES ESPECÍFICAS PARA IMPRESIÓN */
-            .print-hide { display: none !important; }
-            .print-show { display: block !important; }
-            .print-flex-show { display: flex !important; }
-            
             .a4-page {
                 margin: 0 !important; 
                 padding: 11mm 10mm !important; 
@@ -87,18 +81,9 @@
                 page-break-after: always; 
                 page-break-inside: avoid;
             }
-            
-            /* Layout especial para la lista oficial (fluido, permite saltos de página naturales) */
-            .a4-list-page {
-                margin: 0 !important;
-                padding: 15mm 15mm !important;
-                box-shadow: none !important;
-                border: none !important;
-                transform: none !important;
-            }
         }
         
-        /* HOJA A4 CARNETS */
+        /* HOJA A4 y GRID DE CARNETS - ESTRUCTURA RÍGIDA PARA DÚPLEX */
         .a4-page { 
             width: 210mm; 
             height: 297mm; 
@@ -110,16 +95,6 @@
             gap: 0; 
             box-sizing: border-box;
             transition: transform 0.3s ease; 
-        }
-        
-        /* HOJA A4 LISTA (Renderizado en pantalla) */
-        .a4-list-page {
-            width: 210mm;
-            min-height: 297mm;
-            background: white;
-            padding: 15mm;
-            box-sizing: border-box;
-            transition: transform 0.3s ease;
         }
 
         .carnet-wrapper {
@@ -181,10 +156,11 @@
                 <div class="px-6 py-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                     <div>
                         <h2 id="dev-trigger" class="text-lg font-bold font-serif text-gray-900 uppercase tracking-wide cursor-default select-none">Planilla de Inscripción</h2>
-                        <p class="text-sm text-gray-500 mt-1">Complete los datos del Colegio y los jugadores.</p>
+                        <p class="text-sm text-gray-500 mt-1">Complete los datos del Colegio y Jugadores.</p>
                     </div>
+                    <!-- Botón manual para borrar el caché local -->
                     <button type="button" id="btnClearCache" class="text-xs font-medium text-red-500 hover:text-red-700 transition-colors hidden sm:flex items-center">
-                        <i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> Borrar datos guardados
+                        <i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> Borrar datos
                     </button>
                 </div>
 
@@ -252,30 +228,22 @@
         </div>
 
         <div id="print-section" class="hidden flex-col items-center w-full bg-cuervo-900 min-h-screen py-10 overflow-x-hidden">
-            <div class="w-full max-w-[210mm] flex justify-between items-center mb-6 no-print gap-4 flex-wrap bg-white p-4 rounded-lg shadow-lg relative z-20">
+            <div class="w-full max-w-[210mm] flex justify-between items-center mb-6 no-print gap-4 flex-wrap bg-white p-4 rounded-lg shadow-lg">
                 <button type="button" id="btnBackToForm" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-bold uppercase text-gray-700 hover:bg-gray-50 transition-all">
                     <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Editar Datos
                 </button>
-                <div class="flex gap-2 flex-wrap justify-end">
-                    <button type="button" id="btnSendEmail" class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-sm font-bold uppercase text-white hover:bg-blue-700 transition-all shadow-sm">
-                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Copiar/Enviar
+                <div class="flex gap-3">
+                    <button type="button" id="btnSendEmail" class="inline-flex items-center px-5 py-2 bg-blue-600 rounded-md text-sm font-bold uppercase text-white hover:bg-blue-700 transition-all shadow-sm">
+                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar y Enviar
                     </button>
-                    <!-- NUEVO BOTÓN: VER LISTA -->
-                    <button type="button" id="btnExportList" class="inline-flex items-center px-4 py-2 bg-gray-800 rounded-md text-sm font-bold uppercase text-white hover:bg-gray-900 transition-all shadow-sm">
-                        <i data-lucide="table" class="w-4 h-4 mr-2"></i> Ver Lista
-                    </button>
-                    <button type="button" id="btnExportPDF" class="inline-flex items-center px-4 py-2 bg-gold-500 rounded-md text-sm font-bold uppercase text-white hover:bg-gold-700 transition-all shadow-sm">
-                        <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Imprimir Carnets
+                    <button type="button" id="btnExportPDF" class="inline-flex items-center px-5 py-2 bg-gold-500 rounded-md text-sm font-bold uppercase text-white hover:bg-gold-700 transition-all shadow-sm">
+                        <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Imprimir
                     </button>
                 </div>
             </div>
             
-            <!-- Contenedor 1: Grilla de Carnets -->
-            <div id="carnetsContainer" class="w-full flex flex-col items-center pb-10"></div>
-            
-            <!-- Contenedor 2: Tabla de Lista Oficial (Oculta por defecto) -->
-            <div id="listPrintContainer" class="hidden w-full flex-col items-center pb-10"></div>
-
+            <div id="carnetsContainer" class="w-full flex flex-col items-center pb-10">
+            </div>
         </div>
     </main>
 
@@ -284,9 +252,12 @@
     <script>
         lucide.createIcons();
 
+        // URLs de Repositorio Local
         const URL_ESCUDO = "./ESCUDO.png";
         const URL_REVERSO = "./CARNETDEJUGADOR.png";
         const CORREO_DESTINATARIO = "clubatleticocentraln@gmail.com"; 
+        
+        // --- PREFIJO PARA LOCALSTORAGE (Namespace) ---
         const LS_PREFIX = "copa_central_2026_";
 
         const formRowsContainer = document.getElementById('formRows');
@@ -294,12 +265,9 @@
         const formSection = document.getElementById('form-section');
         const printSection = document.getElementById('print-section');
         const carnetsContainer = document.getElementById('carnetsContainer');
-        const listPrintContainer = document.getElementById('listPrintContainer');
-        
         const btnBackToForm = document.getElementById('btnBackToForm');
         const btnSendEmail = document.getElementById('btnSendEmail');
         const btnExportPDF = document.getElementById('btnExportPDF');
-        const btnExportList = document.getElementById('btnExportList');
         const btnClearCache = document.getElementById('btnClearCache');
 
         const inputEquipo = document.getElementById('inputEquipo');
@@ -317,6 +285,7 @@
             shieldWatermark.classList.remove('hidden');
         }
 
+        // Triple Clic = Autocompletar datos
         let clickCount = 0;
         let clickTimer = null;
 
@@ -342,11 +311,13 @@
                 document.getElementById('dni_del').value = "20123456";
                 document.getElementById('fecha_del').value = "1975-10-22";
 
+                // Simular evento input para desencadenar el autoguardado en LocalStorage
                 registrationForm.dispatchEvent(new Event('input', { bubbles: true }));
                 showToast("Modo de Testeo Activado: Planilla autocompletada y guardada.", "success");
             }
         });
 
+        // GENERACIÓN Y LÓGICA PRINCIPAL
         function generateRows() {
             let html = '';
             for (let i = 1; i <= TOTAL_ROWS; i++) {
@@ -382,9 +353,12 @@
 
         generateRows();
 
+        // SISTEMA DE AUTOGUARDADO (LocalStorage)
+        // 1. Guardar datos cada vez que el usuario interactúa
         function saveFormData(event) {
             const el = event.target;
             if (!el.id || el.id === 'honey_pot_field' || el.readOnly || el.disabled) return;
+            
             const value = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
             localStorage.setItem(LS_PREFIX + el.id, value);
         }
@@ -392,12 +366,14 @@
         registrationForm.addEventListener('input', saveFormData);
         registrationForm.addEventListener('change', saveFormData);
 
+        // 2. Cargar datos al iniciar
         function loadFormData() {
             const elements = registrationForm.elements;
             let loadedCount = 0;
 
             for (let el of elements) {
                 if (!el.id || el.id === 'honey_pot_field') continue;
+                
                 const savedValue = localStorage.getItem(LS_PREFIX + el.id);
                 if (savedValue !== null) {
                     if (el.type === 'checkbox' || el.type === 'radio') {
@@ -408,11 +384,13 @@
                     loadedCount++;
                 }
             }
+            
             if(loadedCount > 0) {
                 showToast("Borrador recuperado. Puede continuar editando.", "success");
             }
         }
 
+        // 3. Limpieza Post-Envío (O manual)
         function clearFormData() {
             const elements = registrationForm.elements;
             for (let el of elements) {
@@ -432,6 +410,8 @@
 
         document.addEventListener('DOMContentLoaded', loadFormData);
 
+
+        // TOASTS Y VALIDACIÓN
         function showToast(message, type = 'warning') {
             const toast = document.createElement('div');
             const bgColor = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-green-600' : 'bg-gray-800');
@@ -545,10 +525,10 @@
                 return;
             }
 
+            // ÉXITO: Limpiamos LocalStorage al generar carnets correctos
             clearFormData();
 
             renderCarnets(validData, metadata);
-            renderList(validData, metadata); // Renderiza la tabla oculta en el DOM
             formSection.classList.add('hidden');
             printSection.classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -568,50 +548,18 @@
             }
         });
 
-        // --- IMPRESIÓN DE CARNETS ---
         btnExportPDF.addEventListener('click', () => {
             const originalTitle = document.title;
-            document.title = `${metadata.equipo}_Carnets_2026`;
-            
-            // Nos aseguramos que solo se vea la grilla de carnets al imprimir
-            carnetsContainer.classList.remove('print-hide');
-            listPrintContainer.classList.add('print-hide');
-            
+            document.title = `${metadata.equipo} Carnets 2026`;
             window.print();
-            
             setTimeout(() => { document.title = originalTitle; }, 500);
-        });
-
-        // --- NUEVA IMPRESIÓN DE LISTA (TOGGLING) ---
-        btnExportList.addEventListener('click', () => {
-            const originalTitle = document.title;
-            document.title = `Lista_Oficial_${metadata.equipo}_2026`;
-            
-            // Ocultamos la vista de Carnets y mostramos la Lista en pantalla e impresión
-            carnetsContainer.classList.add('hidden', 'print-hide');
-            listPrintContainer.classList.remove('hidden', 'print-hide');
-            
-            // Desactivamos el escalado responsivo temporalmente para que el navegador mida la tabla pura
-            const pages = document.querySelectorAll('.a4-list-page');
-            pages.forEach(p => p.style.transform = 'none');
-            
-            window.print();
-            
-            // Restauración automática a la vista original (Carnets) tras 1 segundo
-            setTimeout(() => { 
-                document.title = originalTitle; 
-                carnetsContainer.classList.remove('hidden', 'print-hide');
-                listPrintContainer.classList.add('hidden', 'print-hide');
-                applyResponsiveScale();
-            }, 1000);
         });
 
         function applyResponsiveScale() {
             const screenWidth = window.innerWidth;
             const targetWidth = 830; 
-            
-            // Aplica escalado SOLO a los carnets, la tabla nativa de HTML suele fluir mejor en móviles
             const pages = document.querySelectorAll('.a4-page');
+
             pages.forEach(page => {
                 if (screenWidth < targetWidth) {
                     const scale = screenWidth / targetWidth;
@@ -623,41 +571,36 @@
                     page.style.marginBottom = '3rem'; 
                 }
             });
-            
-            // La lista también puede escalarse si está visible
-            const listPages = document.querySelectorAll('.a4-list-page');
-            listPages.forEach(page => {
-                if (screenWidth < targetWidth) {
-                    const scale = screenWidth / targetWidth;
-                    page.style.transform = `scale(${scale})`;
-                    page.style.transformOrigin = 'top center';
-                } else {
-                    page.style.transform = 'none';
-                }
-            });
         }
 
         window.addEventListener('resize', applyResponsiveScale);
 
         function renderCarnets(data, meta) {
             carnetsContainer.innerHTML = '';
+            
             const ITEMS_PER_PAGE = 10; 
             const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
             for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                
+                // --- HOJA FRENTE ---
                 const pageDiv = document.createElement('div');
                 pageDiv.className = 'a4-page shadow-2xl mb-12'; 
+
                 const startIdx = pageIndex * ITEMS_PER_PAGE;
                 const pageData = data.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
                 for (let i = 0; i < ITEMS_PER_PAGE; i++) {
                     const jugador = pageData[i];
+
                     if (jugador) {
                         const [y, m, d] = jugador.fecha.split('-');
                         const fechaFormateada = `${d}/${m}/${y}`;
                         const displayNombre = jugador.isDelegate ? `${jugador.nombre} (DEL)` : jugador.nombre;
+
                         const wrapper = document.createElement('div');
                         wrapper.className = 'carnet-wrapper';
+                        
                         wrapper.innerHTML = `
                             <div class="absolute top-0 left-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(-45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 0 100%);"></div>
                             <div class="absolute top-0 right-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 100% 100%);"></div>
@@ -665,10 +608,14 @@
                                 <div class="absolute bottom-0 left-0 w-[8mm] h-[8mm] bg-[#7B1220]"></div>
                                 <div class="absolute bottom-0 left-[2mm] w-[16mm] h-[16mm]" style="background: repeating-linear-gradient(45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 100%, 100% 100%, 0 0);"></div>
                             </div>
+
                             <div class="relative z-10 flex flex-col h-full w-full p-[3mm]">
                                 <div class="flex items-center justify-center w-full mb-[2mm]">
-                                    <h3 class="font-sans font-black uppercase text-[11px] leading-none tracking-tight text-[#7B1220]">COPA CENTRAL: INTERCOLEGIAL</h3>
+                                    <h3 class="font-sans font-black uppercase text-[11px] leading-none tracking-tight text-[#7B1220]">
+                                        COPA CENTRAL: INTERCOLEGIAL
+                                    </h3>
                                 </div>
+
                                 <div class="flex flex-1 w-full gap-[2.5mm]">
                                     <div class="w-[30%] aspect-square shrink-0 self-center flex flex-col relative bg-[#7B1220] shadow-[0_3px_5px_rgba(0,0,0,0.5)] overflow-hidden">
                                         <div class="absolute top-0 left-0 w-[150%] h-[150%] bg-gradient-to-br from-black/60 via-transparent to-transparent pointer-events-none -translate-x-[20%] -translate-y-[20%]"></div>
@@ -684,6 +631,7 @@
                                             <span class="text-[4.5px] font-black text-[#7B1220] tracking-wider block leading-none">FOTO 4x4</span>
                                         </div>
                                     </div>
+                                    
                                     <div class="w-[70%] flex flex-col justify-between h-full space-y-[1.5mm]">
                                         <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
                                             <div class="bg-[#7B1220] text-white text-[4.2px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">NOMBRE:</div>
@@ -714,121 +662,56 @@
                         pageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
                     }
                 }
+
                 carnetsContainer.appendChild(pageDiv);
 
+                // --- HOJA REVERSO ---
                 if (URL_REVERSO.trim() !== "") {
                     const backPageDiv = document.createElement('div');
                     backPageDiv.className = 'a4-page shadow-2xl mb-12'; 
+
                     for (let i = 0; i < 10; i += 2) {
                         const leftCardData = pageData[i]; 
                         const rightCardData = pageData[i + 1]; 
+                        
                         if (rightCardData) {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
                         } else {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
                         }
+                        
                         if (leftCardData) {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
                         } else {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
                         }
                     }
+                    
                     carnetsContainer.appendChild(backPageDiv);
                 }
             }
             lucide.createIcons(); 
         }
 
-        // =========================================================================
-        // MOTOR DE RENDERIZADO TABULAR (LISTA DE BUENA FE)
-        // =========================================================================
-        function renderList(data, meta) {
-            let html = `
-                <div class="a4-list-page shadow-2xl mb-12 flex flex-col justify-between" style="width: 210mm; min-height: 297mm; background: white;">
-                    
-                    <div class="flex-grow">
-                        <!-- ENCABEZADO OFICIAL -->
-                        <div class="flex justify-between items-center border-b-2 border-gold-500 pb-4 mb-6">
-                            <div class="flex items-center gap-4">
-                                <img src="${URL_ESCUDO}" class="w-16 h-16 object-contain ${URL_ESCUDO.trim() ? '' : 'hidden'}" />
-                                <div>
-                                    <h1 class="text-2xl font-black font-serif uppercase tracking-widest text-cuervo-900">Copa Central</h1>
-                                    <h2 class="text-sm font-bold uppercase tracking-widest text-gray-500">Lista de Buena Fe - Roster Oficial</h2>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-bold text-gray-800 uppercase">Equipo: <span class="text-gold-700">${meta.equipo}</span></p>
-                                <p class="text-xs font-bold text-gray-500 uppercase mt-1">Colegio: ${meta.colegio}</p>
-                                <p class="text-[10px] text-gray-400 mt-1">Impreso: ${new Date().toLocaleDateString()}</p>
-                            </div>
-                        </div>
-
-                        <!-- TABLA DE DATOS -->
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gray-100 border-y-2 border-gray-300">
-                                    <th class="py-3 px-4 text-[11px] font-black text-gray-700 uppercase tracking-wider w-12 text-center">Nº</th>
-                                    <th class="py-3 px-4 text-[11px] font-black text-gray-700 uppercase tracking-wider">Nombre y Apellido</th>
-                                    <th class="py-3 px-4 text-[11px] font-black text-gray-700 uppercase tracking-wider text-center">D.N.I.</th>
-                                    <th class="py-3 px-4 text-[11px] font-black text-gray-700 uppercase tracking-wider text-center">Nacimiento</th>
-                                    <th class="py-3 px-4 text-[11px] font-black text-gray-700 uppercase tracking-wider">Curso / Cat.</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 border-b-2 border-gray-300">
-            `;
-            
-            data.forEach((row, index) => {
-                const isDel = row.isDelegate;
-                const filaStr = isDel ? 'DEL' : row.i;
-                const bg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                
-                // Formateo visual
-                const [y, m, d] = row.fecha.split('-');
-                const fechaFormat = `${d}/${m}/${y}`;
-                const boldClass = isDel ? 'font-bold bg-gray-100 text-cuervo-900' : 'text-gray-700';
-
-                html += `
-                                <tr class="${bg} ${isDel ? 'border-t-2 border-gray-300' : ''} print:break-inside-avoid">
-                                    <td class="py-2.5 px-4 text-xs font-black text-center ${boldClass}">${filaStr}</td>
-                                    <td class="py-2.5 px-4 text-xs font-semibold ${boldClass}">${row.nombre}</td>
-                                    <td class="py-2.5 px-4 text-xs font-mono text-center ${boldClass}">${row.dni}</td>
-                                    <td class="py-2.5 px-4 text-xs text-center ${boldClass}">${fechaFormat}</td>
-                                    <td class="py-2.5 px-4 text-xs font-medium ${boldClass}">${row.curso}</td>
-                                </tr>
-                `;
-            });
-            
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- MÓDULO DE FIRMAS -->
-                    <div class="mt-16 pt-10 pb-8 flex justify-around w-full print:break-inside-avoid">
-                        <div class="text-center w-64">
-                            <div class="border-b border-gray-800 w-full mb-2"></div>
-                            <p class="text-xs font-bold text-gray-800 uppercase tracking-wide">Firma Delegado Responsable</p>
-                            <p class="text-[10px] text-gray-500 mt-1">Aceptación del Reglamento Gral.</p>
-                        </div>
-                        <div class="text-center w-64">
-                            <div class="border-b border-gray-800 w-full mb-2"></div>
-                            <p class="text-xs font-bold text-gray-800 uppercase tracking-wide">Sello y Autorización C.A.C.N.</p>
-                            <p class="text-[10px] text-gray-500 mt-1">Fiscalización</p>
-                        </div>
-                    </div>
-
-                </div>
-            `;
-            
-            listPrintContainer.innerHTML = html;
-        }
-
         function generateEmailPlainText(data, meta) {
-            let text = `EQUIPO\tCOLEGIO\tTIPO/Nº\tNOMBRE Y APELLIDO\tDNI\tFECHA NAC.\tCURSO\r\n`;
+            let text = `LISTA: C.A. CENTRAL NORTE\r\n`;
+            text += `========================================\r\n\r\n`;
+            text += `EQUIPO:  ${meta.equipo}\r\n`;
+            text += `COLEGIO: ${meta.colegio}\r\n`;
+            
+            text += `----------------------------------------\r\n`;
+            text += `LISTA DE JUGADORES\r\n`;
+            text += `----------------------------------------\r\n\r\n`;
+            
             data.forEach(row => {
-                const filaStr = row.isDelegate ? 'DELEGADO' : row.i;
-                text += `${meta.equipo}\t${meta.colegio}\t${filaStr}\t${row.nombre}\t${row.dni}\t${row.fecha}\t${row.curso}\r\n`;
+                const filaStr = row.isDelegate ? 'DEL ' : `Nº ${row.i}`;
+                text += `[ ${filaStr} ] ${row.nombre}\r\n`;
+                text += `    DNI:   ${row.dni}\r\n`;
+                text += `    Nac:   ${row.fecha}\r\n`;
+                text += `    Curso: ${row.curso}\r\n\r\n`;
             });
+            
+            text += `========================================\r\n`;
             return text;
         }
 
@@ -836,6 +719,7 @@
             const plainTextBody = generateEmailPlainText(validData, metadata);
             const subject = encodeURIComponent(`Inscripción: ${metadata.equipo} - ${metadata.colegio}`);
             const body = encodeURIComponent(plainTextBody);
+            
             window.location.href = `mailto:${CORREO_DESTINATARIO}?subject=${subject}&body=${body}`;
         });
 
