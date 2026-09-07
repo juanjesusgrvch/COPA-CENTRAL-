@@ -847,10 +847,14 @@
         }
 
         function generateEmailPlainText(data, meta) {
-            let text = `EQUIPO\tCOLEGIO\tTIPO/Nº\tNOMBRE Y APELLIDO\tDNI\tFECHA NAC.\tCURSO\r\n`;
+            let text = `¡Hola! Adjunto la planilla de inscripción.\r\n\r\n`;
+            text += `=================================================\r\n\r\n`;
+            
+            text += `${metadata.equipo} - ${metadata.colegio}`
+            text += `Nº;NOMBRE Y APELLIDO;DNI;FECHA NAC.;CURSO\r\n`;
             data.forEach(row => {
                 const filaStr = row.isDelegate ? 'DELEGADO' : row.i;
-                text += `${meta.equipo}\t${meta.colegio}\t${filaStr}\t${row.nombre}\t${row.dni}\t${row.fecha}\t${row.curso}\r\n`;
+                text += `${meta.equipo};${meta.colegio};${filaStr};${row.nombre};${row.dni};${row.fecha};${row.curso}\r\n`;
             });
             return text;
         }
