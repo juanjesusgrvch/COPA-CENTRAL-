@@ -46,7 +46,7 @@
         }
 
         /* ==================================================================
-           LÓGICA DE IMPRESIÓN CORREGIDA (EVITA COLAPSO DE HOJAS)
+           LÓGICA DE IMPRESIÓN (BLOQUEO DE NETLIFY Y CENTRADO GEOMÉTRICO)
            ================================================================== */
         @media print {
             @page { 
@@ -56,7 +56,7 @@
             
             html, body { 
                 width: 210mm !important;
-                height: auto !important; /* Permitir altura dinámica para fluir páginas */
+                height: auto !important; 
                 margin: 0 !important; 
                 padding: 0 !important;
                 background-color: white !important; 
@@ -64,71 +64,74 @@
                 print-color-adjust: exact; 
             }
             
-            /* NETLIFY BADGE KILLER: Oculta cualquier script/widget externo inyectado */
+            /* NETLIFY BADGE KILLER */
             body > *:not(main) { display: none !important; }
             a[href*="netlify.com"] { display: none !important; }
             iframe { display: none !important; }
 
-            /* Ocultar elementos de UI propios */
             header, #form-section, .no-print, #toast-container { 
                 display: none !important; 
             }
             
-            /* Contenedores Principales en Modo Bloque (Previene overlap) */
             #print-section, #carnetsContainer, #listPrintContainer { 
                 display: block !important; 
                 width: 100% !important; 
                 margin: 0 !important; 
                 padding: 0 !important; 
+                position: static !important;
                 background: white !important;
             }
 
             .print-hide { display: none !important; }
             
-            /* Hojas A4 */
+            /* HOJA A4 CARNETS EN IMPRESIÓN: Centrado Matemático vía Grid */
             .a4-page {
                 display: grid !important; 
+                width: 210mm !important; 
+                height: 297mm !important; 
                 margin: 0 !important; 
-                padding: 11mm 10mm !important; 
+                padding: 0 !important; /* Eliminamos paddings, usamos Grid Alignment */
+                justify-content: center !important; 
+                align-content: center !important;
                 box-shadow: none !important; 
                 border: none !important; 
                 transform: none !important; 
-                
-                /* Forzar saltos de página nativos */
                 page-break-after: always !important; 
-                page-break-inside: avoid !important;
                 break-after: page !important;
+                page-break-inside: avoid !important;
                 break-inside: avoid !important;
             }
 
             .a4-list-page {
                 display: flex !important;
+                width: 210mm !important;
+                height: 297mm !important;
                 margin: 0 !important;
                 padding: 15mm !important;
                 box-shadow: none !important; 
                 border: none !important; 
                 transform: none !important; 
-                
                 page-break-after: always !important; 
                 break-after: page !important;
             }
         }
         
-        /* HOJA A4 CARNETS (Pantalla) */
+        /* HOJA A4 CARNETS (Vista Pantalla) */
         .a4-page { 
             width: 210mm; 
             height: 297mm; 
             background: white; 
-            padding: 11mm 10mm; 
+            padding: 0; /* Sustituido por justificación en Grid */
             display: grid; 
             grid-template-columns: 95mm 95mm; 
             grid-template-rows: repeat(5, 55mm); 
+            justify-content: center; /* Centrado horizontal perfecto */
+            align-content: center; /* Centrado vertical perfecto */
             gap: 0; 
             box-sizing: border-box;
             transition: transform 0.3s ease; 
         }
         
-        /* HOJA A4 LISTA (Pantalla) */
         .a4-list-page {
             width: 210mm;
             height: 297mm; 
@@ -202,7 +205,7 @@
                         <p class="text-sm text-gray-500 mt-1">Complete los datos del Colegio y los jugadores.</p>
                     </div>
                     <button type="button" id="btnClearCache" class="text-xs font-medium text-red-500 hover:text-red-700 transition-colors hidden sm:flex items-center">
-                        <i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> Borrar datos guardados
+                        <i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> Borrar datos
                     </button>
                 </div>
 
@@ -276,7 +279,7 @@
                 </button>
                 <div class="flex gap-2 flex-wrap justify-end">
                     <button type="button" id="btnSendEmail" class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-sm font-bold uppercase text-white hover:bg-blue-700 transition-all shadow-sm">
-                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Copiar/Enviar
+                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar y Enviar
                     </button>
                     <button type="button" id="btnExportList" class="inline-flex items-center px-4 py-2 bg-gray-800 rounded-md text-sm font-bold uppercase text-white hover:bg-gray-900 transition-all shadow-sm">
                         <i data-lucide="table" class="w-4 h-4 mr-2"></i> Ver Lista
@@ -288,9 +291,7 @@
             </div>
             
             <div id="carnetsContainer" class="w-full flex flex-col items-center pb-10"></div>
-            
             <div id="listPrintContainer" class="hidden w-full flex-col items-center pb-10"></div>
-
         </div>
     </main>
 
@@ -647,7 +648,7 @@
         window.addEventListener('resize', applyResponsiveScale);
 
         // =========================================================================
-        // MOTOR DE RENDERIZADO CARNETS
+        // MOTOR DE RENDERIZADO CARNETS: Cuadrícula Perfecta
         // =========================================================================
         function renderCarnets(data, meta) {
             carnetsContainer.innerHTML = '';
@@ -722,7 +723,8 @@
                         `;
                         pageDiv.appendChild(wrapper);
                     } else {
-                        pageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
+                        // El borde transparente garantiza que la celda fantasma ocupe el mismo espacio milimétrico
+                        pageDiv.innerHTML += `<div class="carnet-wrapper" style="border: 1px solid transparent; background: transparent;"></div>`;
                     }
                 }
                 carnetsContainer.appendChild(pageDiv);
@@ -736,12 +738,12 @@
                         if (rightCardData) {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
                         } else {
-                            backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
+                            backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: 1px solid transparent; background: transparent;"></div>`;
                         }
                         if (leftCardData) {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
                         } else {
-                            backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: none; background: transparent;"></div>`;
+                            backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: 1px solid transparent; background: transparent;"></div>`;
                         }
                     }
                     carnetsContainer.appendChild(backPageDiv);
@@ -751,11 +753,11 @@
         }
 
         // =========================================================================
-        // MOTOR DE RENDERIZADO TABULAR (LISTA DE BUENA FE)
+        // MOTOR DE RENDERIZADO TABULAR
         // =========================================================================
         function renderList(data, meta) {
             let html = `
-                <div class="a4-list-page shadow-2xl mb-12 flex flex-col justify-between" style="width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; background: white;">
+                <div class="a4-list-page shadow-2xl mb-12 flex flex-col justify-between">
                     
                     <div class="flex-grow">
                         <div class="flex justify-between items-center border-b-2 border-gold-500 pb-4 mb-4">
@@ -763,7 +765,7 @@
                                 <img src="${URL_ESCUDO}" class="w-16 h-16 object-contain ${URL_ESCUDO.trim() ? '' : 'hidden'}" />
                                 <div>
                                     <h1 class="text-2xl font-black font-serif uppercase tracking-widest text-cuervo-900">Copa Central</h1>
-                                    <h2 class="text-sm font-bold uppercase tracking-widest text-gray-500">Lista de Buena Fe - Roster Oficial</h2>
+                                    <h2 class="text-sm font-bold uppercase tracking-widest text-gray-500">Lista de Buena Fe</h2>
                                 </div>
                             </div>
                             <div class="text-right">
