@@ -6,6 +6,11 @@
     <title>Inscripciones - C.A. Central Norte</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Librerías robustas para renderizado PDF pixel-perfect -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -64,7 +69,7 @@
                 print-color-adjust: exact; 
             }
             
-            /* RESETEO NUCLEAR DE CONTENEDORES PADRE (Soluciona margen superior) */
+            /* RESETEO NUCLEAR DE CONTENEDORES PADRE */
             main, #print-section, #carnetsContainer, #listPrintContainer { 
                 display: block !important; 
                 width: 210mm !important; 
@@ -80,28 +85,26 @@
             a[href*="netlify.com"] { display: none !important; }
             iframe { display: none !important; }
 
-            header, #form-section, .no-print, #toast-container { 
+            header, #form-section, .no-print, #toast-container, #termsModal { 
                 display: none !important; 
             }
 
             .print-hide { display: none !important; }
             
-            /* HOJA A4 CARNETS: Matemáticas Absolutas (Soluciona alineación y hoja en blanco) */
+            /* HOJA A4 CARNETS */
             .a4-page {
                 display: grid !important; 
                 width: 210mm !important; 
-                /* Se reduce a 296.5 para matar la hoja en blanco por desbordamiento microscópico */
                 height: 296.5mm !important; 
                 max-height: 296.5mm !important;
                 margin: 0px !important; 
-                /* Coordenadas absolutas: 11mm Y, 10mm X */
                 padding: 11mm 10mm 0mm 10mm !important; 
                 grid-template-columns: 95mm 95mm !important;
                 grid-template-rows: repeat(5, 55mm) !important;
-                justify-content: start !important; /* Fuerza matemática, elimina el render libre */
+                justify-content: start !important; 
                 align-content: start !important;
                 box-sizing: border-box !important; 
-                overflow: hidden !important; /* Corta excesos invisibles */
+                overflow: hidden !important; 
                 box-shadow: none !important; 
                 border: none !important; 
                 transform: none !important; 
@@ -136,7 +139,7 @@
             width: 210mm; 
             height: 297mm; 
             background: white; 
-            padding: 11mm 10mm 0mm 10mm; /* Sincronizado con la impresión */
+            padding: 11mm 10mm 0mm 10mm; 
             display: grid; 
             grid-template-columns: 95mm 95mm; 
             grid-template-rows: repeat(5, 55mm); 
@@ -220,7 +223,7 @@
                         <p class="text-sm text-gray-500 mt-1">Complete los datos del Colegio y los jugadores.</p>
                     </div>
                     <button type="button" id="btnClearCache" class="text-xs font-medium text-red-500 hover:text-red-700 transition-colors hidden sm:flex items-center">
-                        <i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> Borrar datos guardados
+                        <i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> Borrar datos
                     </button>
                 </div>
 
@@ -287,28 +290,114 @@
             </div>
         </div>
 
-        <div id="print-section" class="hidden flex-col items-center w-full bg-cuervo-900 min-h-screen py-10 overflow-x-hidden">
-            <div class="w-full max-w-[210mm] flex justify-between items-center mb-6 no-print gap-4 flex-wrap bg-white p-4 rounded-lg shadow-lg relative z-20">
+        <div id="print-section" class="hidden flex-col w-full bg-cuervo-900 min-h-screen py-10 overflow-x-hidden">
+            <div class="w-full max-w-[210mm] mx-auto flex justify-between items-center mb-6 no-print gap-4 flex-wrap bg-white p-4 rounded-lg shadow-lg relative z-20">
                 <button type="button" id="btnBackToForm" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-bold uppercase text-gray-700 hover:bg-gray-50 transition-all">
                     <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Editar Datos
                 </button>
-                <div class="flex gap-2 flex-wrap justify-end">
+                <div class="flex gap-2 flex-wrap justify-end items-center">
+                    <!-- Toggles de Vista Previa -->
+                    <div class="flex bg-gray-100 p-1 rounded-md border border-gray-200 mr-2">
+                        <button type="button" id="btnViewCarnets" class="px-3 py-1.5 bg-white shadow-sm rounded text-xs font-bold uppercase text-gray-800 transition-all">
+                            Ver Carnets
+                        </button>
+                        <button type="button" id="btnViewList" class="px-3 py-1.5 text-gray-500 hover:text-gray-800 rounded text-xs font-bold uppercase transition-all">
+                            Ver Lista
+                        </button>
+                    </div>
+            
                     <button type="button" id="btnSendEmail" class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-md text-sm font-bold uppercase text-white hover:bg-blue-700 transition-all shadow-sm">
-                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar y Enviar
+                        <i data-lucide="mail" class="w-4 h-4 mr-2"></i> Confirmar y Enviar Email
                     </button>
-                    <button type="button" id="btnExportList" class="inline-flex items-center px-4 py-2 bg-gray-800 rounded-md text-sm font-bold uppercase text-white hover:bg-gray-900 transition-all shadow-sm">
-                        <i data-lucide="table" class="w-4 h-4 mr-2"></i> Ver Lista
-                    </button>
-                    <button type="button" id="btnExportPDF" class="inline-flex items-center px-4 py-2 bg-gold-500 rounded-md text-sm font-bold uppercase text-white hover:bg-gold-700 transition-all shadow-sm">
-                        <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Imprimir Carnets
+                    
+                    <!-- Botón de Descarga Directa -->
+                    <button type="button" id="btnDownloadPDF" class="inline-flex items-center px-4 py-2 bg-gold-500 rounded-md text-sm font-bold uppercase text-white hover:bg-gold-700 transition-all shadow-sm">
+                        <i data-lucide="download" class="w-4 h-4 mr-2"></i> Descargar PDF
                     </button>
                 </div>
             </div>
             
-            <div id="carnetsContainer" class="w-full flex flex-col items-center pb-10"></div>
-            <div id="listPrintContainer" class="hidden w-full flex-col items-center pb-10"></div>
+            <div id="carnetsContainer" class="w-full flex flex-col pb-10"></div>
+            <div id="listPrintContainer" class="hidden w-full flex flex-col pb-10"></div>
         </div>
     </main>
+
+    <!-- MODAL DE TÉRMINOS Y CONDICIONES -->
+    <div id="termsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-cuervo-900/80 backdrop-blur-sm" id="termsBackdrop"></div>
+        
+        <!-- Contenido del Modal -->
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden transform transition-all">
+            <!-- Cabecera -->
+            <div class="px-6 py-5 border-b border-gray-200 bg-gray-50 shrink-0">
+                <h3 class="text-xl font-black font-serif text-cuervo-900 uppercase tracking-wide flex items-center">
+                    <i data-lucide="scale" class="w-6 h-6 mr-3 text-gold-500"></i>
+                    Términos y Condiciones
+                </h3>
+            </div>
+            
+            <!-- Cuerpo (Scrolleable) -->
+            <div class="px-6 py-6 overflow-y-auto flex-1 bg-white" style="scrollbar-width: thin;">
+                <div class="space-y-8 text-sm text-gray-700 leading-relaxed">
+                    <!-- Seccion 1 -->
+                    <div>
+                        <h4 class="font-black text-gray-900 uppercase border-b-2 border-gold-500 pb-1 mb-3">I. BASES Y CONDICIONES DE INSCRIPCIÓN</h4>
+                        <p class="text-justify">En mi deber como delegado y en representación del equipo, me comprometo a participar en el campeonato de fútbol 7 organizado por el Club Atlético Central Norte, sujeto a los términos y condiciones de la Comisión Organizadora. Entendemos la importancia de cumplir con las responsabilidades y requisitos de participación, comprometiéndonos a acatarlos de manera rigurosa y puntual.</p>
+                    </div>
+                    
+                    <!-- Seccion 2 -->
+                    <div>
+                        <h4 class="font-black text-gray-900 uppercase border-b-2 border-gold-500 pb-1 mb-3">II. OBLIGACIONES DEL EQUIPO</h4>
+                        <p class="mb-3 font-medium text-gray-900">Confirmamos nuestro compromiso de cumplir con las siguientes responsabilidades:</p>
+                        <ul class="list-none space-y-2">
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Documentación:</strong> Presentar toda la documentación requerida en la fecha y horario estipulado.</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Puntualidad:</strong> Respetar los horarios de los encuentros (se dispone de un margen de tolerancia estricto de 15 minutos).</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Lista de Partido:</strong> Presentarla con la debida anticipación antes del inicio de cada encuentro (titulares y suplentes).</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Indumentaria y Planilla:</strong> Garantizar que todos los jugadores se presenten con la indumentaria correspondiente y firmen la planilla de juego.</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Elementos de Juego:</strong> Aportar una pelota para cada encuentro, asumiendo la responsabilidad en caso de rotura o pérdida.</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Aranceles Arbitrales:</strong> Abonar el monto de la terna arbitral antes de disputar cada encuentro.</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Reglamento:</strong> Leer y comprender el reglamento del campeonato.</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Exclusividad Escolar:</strong> Incluir exclusivamente jugadores que pertenezcan al mismo Colegio (la infracción de esta norma conlleva la descalificación).</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Identificación:</strong> Ingresar con el DNI (Tarjeta o Digital) a todos los encuentros.</span></li>
+                            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 text-gold-500 mr-2 mt-0.5 shrink-0"></i> <span><strong class="text-gray-900">Inscripción:</strong> Realizar el pago total de la inscripción antes de la segunda fecha.</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Seccion 3 -->
+                    <div>
+                        <h4 class="font-black text-gray-900 uppercase border-b-2 border-gold-500 pb-1 mb-3">III. OBLIGACIONES DEL ORGANIZADOR</h4>
+                        <p class="mb-3 font-medium text-gray-900">El CLUB se compromete a:</p>
+                        <ul class="list-none space-y-2">
+                            <li class="flex items-start"><i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 mr-2 mt-0.5 shrink-0"></i> <span>Brindar instalaciones adecuadas para la disputa de los partidos.</span></li>
+                            <li class="flex items-start"><i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 mr-2 mt-0.5 shrink-0"></i> <span>Designar árbitros oficiales para cada encuentro.</span></li>
+                            <li class="flex items-start"><i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 mr-2 mt-0.5 shrink-0"></i> <span>Llevar a cabo el torneo según estas bases y condiciones.</span></li>
+                            <li class="flex items-start"><i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 mr-2 mt-0.5 shrink-0"></i> <span>Entregar premios a los ganadores.</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Seccion 4 -->
+                    <div>
+                        <h4 class="font-black text-gray-900 uppercase border-b-2 border-gold-500 pb-1 mb-3">IV. RESPONSABILIDAD CIVIL Y MENORES DE EDAD</h4>
+                        <p class="text-justify mb-2">El CLUB informa que cuenta con un seguro para espectadores y cobertura deportiva básica. No obstante, conforme al Código Civil y Comercial de la Nación (Art. 1719 - Asunción de riesgos y concordantes), la Comisión Organizadora y el Club Atlético Central Norte quedan eximidos de responsabilidad civil, penal o administrativa por lesiones, accidentes o daños materiales que pudieran sufrir los jugadores o espectadores derivados de los riesgos inherentes a la práctica deportiva, que excedan el límite de cobertura de dicha póliza.</p>
+                        <p class="text-justify font-medium">En el caso de jugadores o espectadores menores de edad, es responsabilidad absoluta y exclusiva de sus padres, tutores o delegados a cargo velar por su integridad física, cuidado y comportamiento dentro de las instalaciones, asumiendo estos últimos cualquier eventualidad que ocurra fuera del área estricta de juego.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pie de Modal (Acciones) -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="termsCheckbox" class="w-5 h-5 text-gold-500 rounded border-gray-300 focus:ring-gold-500 focus:ring-2 cursor-pointer transition-all">
+                    <span class="text-sm font-black uppercase tracking-wide text-gray-700 group-hover:text-cuervo-900 transition-colors select-none">He leído y acepto los términos</span>
+                </label>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button type="button" id="btnCancelTerms" class="flex-1 sm:flex-none px-5 py-2.5 border-2 border-gray-300 rounded-lg text-sm font-bold uppercase text-gray-700 hover:bg-gray-100 transition-all">Cancelar</button>
+                    <button type="button" id="btnConfirmTerms" disabled class="flex-1 sm:flex-none px-5 py-2.5 border-2 border-cuervo-900 rounded-lg text-sm font-bold uppercase text-white bg-cuervo-900 hover:bg-cuervo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-3 pointer-events-none w-[90%] sm:w-auto max-w-md"></div>
 
@@ -329,9 +418,12 @@
         
         const btnBackToForm = document.getElementById('btnBackToForm');
         const btnSendEmail = document.getElementById('btnSendEmail');
-        const btnExportPDF = document.getElementById('btnExportPDF');
-        const btnExportList = document.getElementById('btnExportList');
         const btnClearCache = document.getElementById('btnClearCache');
+        
+        // Referencias a botones
+        const btnViewCarnets = document.getElementById('btnViewCarnets');
+        const btnViewList = document.getElementById('btnViewList');
+        const btnDownloadPDF = document.getElementById('btnDownloadPDF');
 
         const inputEquipo = document.getElementById('inputEquipo');
         const inputColegio = document.getElementById('inputColegio');
@@ -351,6 +443,7 @@
         let clickCount = 0;
         let clickTimer = null;
 
+        // Easter Egg: Llenado de pruebas
         devTrigger.addEventListener('click', () => {
             clickCount++;
             if (clickCount === 1) {
@@ -576,15 +669,46 @@
                 return;
             }
 
-            clearFormData();
+            // En lugar de renderizar directamente, disparamos el Modal de Términos
+            const termsModal = document.getElementById('termsModal');
+            const termsCheckbox = document.getElementById('termsCheckbox');
+            const btnConfirmTerms = document.getElementById('btnConfirmTerms');
+            
+            termsCheckbox.checked = false; // Resetear el check
+            btnConfirmTerms.disabled = true; // Bloquear botón por seguridad
+            
+            termsModal.classList.remove('hidden');
+            lucide.createIcons(); 
+        });
 
+        // =========================================================================
+        // LÓGICA DEL MODAL DE TÉRMINOS Y CONDICIONES
+        // =========================================================================
+        const termsModal = document.getElementById('termsModal');
+        const termsCheckbox = document.getElementById('termsCheckbox');
+        const btnCancelTerms = document.getElementById('btnCancelTerms');
+        const btnConfirmTerms = document.getElementById('btnConfirmTerms');
+
+        termsCheckbox.addEventListener('change', (e) => {
+            btnConfirmTerms.disabled = !e.target.checked;
+        });
+
+        btnCancelTerms.addEventListener('click', () => {
+            termsModal.classList.add('hidden');
+        });
+
+        btnConfirmTerms.addEventListener('click', () => {
+            termsModal.classList.add('hidden');
+            
+            clearFormData();
             renderCarnets(validData, metadata);
             renderList(validData, metadata); 
+            
             formSection.classList.add('hidden');
             printSection.classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
-            setTimeout(applyResponsiveScale, 50);
+            btnViewCarnets.click();
         });
 
         btnBackToForm.addEventListener('click', () => {
@@ -599,68 +723,131 @@
             }
         });
 
-        btnExportPDF.addEventListener('click', () => {
-            const originalTitle = document.title;
-            document.title = `${metadata.equipo}_Carnets_2026`;
-            
-            carnetsContainer.classList.remove('print-hide');
-            listPrintContainer.classList.add('print-hide');
-            
-            window.print();
-            
-            setTimeout(() => { document.title = originalTitle; }, 500);
-        });
-
-        btnExportList.addEventListener('click', () => {
-            const originalTitle = document.title;
-            document.title = `Lista_Oficial_${metadata.equipo}_2026`;
-            
-            carnetsContainer.classList.add('hidden', 'print-hide');
-            listPrintContainer.classList.remove('hidden', 'print-hide');
-            
-            const pages = document.querySelectorAll('.a4-list-page');
-            pages.forEach(p => p.style.transform = 'none');
-            
-            window.print();
-            
-            setTimeout(() => { 
-                document.title = originalTitle; 
-                carnetsContainer.classList.remove('hidden', 'print-hide');
-                listPrintContainer.classList.add('hidden', 'print-hide');
-                applyResponsiveScale();
-            }, 1000);
-        });
-
         function applyResponsiveScale() {
             const screenWidth = window.innerWidth;
             const targetWidth = 830; 
+            const a4WidthPx = 794; 
             
-            const pages = document.querySelectorAll('.a4-page');
+            const pages = document.querySelectorAll('.a4-page, .a4-list-page');
+            
             pages.forEach(page => {
                 if (screenWidth < targetWidth) {
-                    const scale = screenWidth / targetWidth;
+                    const scale = (screenWidth - 24) / a4WidthPx; 
+                    
                     page.style.transform = `scale(${scale})`;
-                    page.style.transformOrigin = 'top center';
+                    page.style.transformOrigin = 'top left'; 
+                    
+                    const offsetLeft = (screenWidth - (a4WidthPx * scale)) / 2;
+                    page.style.marginLeft = `${offsetLeft}px`;
+                    
                     page.style.marginBottom = `calc(-${297 * (1 - scale)}mm + 20px)`; 
                 } else {
                     page.style.transform = 'none';
+                    page.style.marginLeft = 'auto'; 
+                    page.style.marginRight = 'auto';
                     page.style.marginBottom = '3rem'; 
-                }
-            });
-            
-            const listPages = document.querySelectorAll('.a4-list-page');
-            listPages.forEach(page => {
-                if (screenWidth < targetWidth) {
-                    const scale = screenWidth / targetWidth;
-                    page.style.transform = `scale(${scale})`;
-                    page.style.transformOrigin = 'top center';
-                } else {
-                    page.style.transform = 'none';
                 }
             });
         }
 
         window.addEventListener('resize', applyResponsiveScale);
+
+        // =========================================================================
+        // LÓGICA DE VISTAS PREVIAS
+        // =========================================================================
+        btnViewCarnets.addEventListener('click', () => {
+            btnViewCarnets.classList.add('bg-white', 'shadow-sm', 'text-gray-800');
+            btnViewCarnets.classList.remove('text-gray-500');
+            btnViewList.classList.remove('bg-white', 'shadow-sm', 'text-gray-800');
+            btnViewList.classList.add('text-gray-500');
+            
+            carnetsContainer.classList.remove('hidden');
+            listPrintContainer.classList.add('hidden');
+            setTimeout(applyResponsiveScale, 50); 
+        });
+
+        btnViewList.addEventListener('click', () => {
+            btnViewList.classList.add('bg-white', 'shadow-sm', 'text-gray-800');
+            btnViewList.classList.remove('text-gray-500');
+            btnViewCarnets.classList.remove('bg-white', 'shadow-sm', 'text-gray-800');
+            btnViewCarnets.classList.add('text-gray-500');
+            
+            listPrintContainer.classList.remove('hidden');
+            carnetsContainer.classList.add('hidden');
+            setTimeout(applyResponsiveScale, 50); 
+        });
+
+        // =========================================================================
+        // MOTOR DEFINITIVO PARA PDF (Asíncrono y optimizado en velocidad)
+        // =========================================================================
+        window.jsPDF = window.jspdf.jsPDF;
+        
+        btnDownloadPDF.addEventListener('click', async () => {
+            const originalText = btnDownloadPDF.innerHTML;
+            btnDownloadPDF.disabled = true;
+            
+            try {
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const elements = [];
+                
+                const wasCarnetsHidden = carnetsContainer.classList.contains('hidden');
+                const wasListHidden = listPrintContainer.classList.contains('hidden');
+                
+                carnetsContainer.classList.remove('hidden');
+                listPrintContainer.classList.remove('hidden');
+
+                const pagesNodes = document.querySelectorAll('.a4-page, .a4-list-page');
+                
+                // Preparar las páginas quitándoles la escala para un render perfecto 1:1
+                pagesNodes.forEach(el => {
+                    el.style.transform = 'none';
+                    el.style.margin = '0';
+                    elements.push(el);
+                });
+
+                // Bucle asíncrono para liberar el procesador del navegador entre cada foto
+                for (let i = 0; i < elements.length; i++) {
+                    // Feedback visual al usuario
+                    btnDownloadPDF.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Procesando ${i + 1} de ${elements.length}...`;
+                    lucide.createIcons();
+                    
+                    // Pequeña pausa crucial para que el navegador "respire" y pinte el texto en el botón
+                    await new Promise(resolve => setTimeout(resolve, 50));
+
+                    const canvas = await html2canvas(elements[i], {
+                        scale: 2, // Scale 2 es 400% más veloz que 3, pero mantiene nitidez total para A4
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff'
+                    });
+                    
+                    const imgData = canvas.toDataURL('image/jpeg', 0.90);
+                    
+                    if (i > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+                }
+
+                btnDownloadPDF.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Finalizando...`;
+                lucide.createIcons();
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                pdf.save(`${metadata.equipo}_Inscripcion_Completa_2026.pdf`);
+                showToast("PDF descargado exitosamente.", "success");
+
+                // Restaurar el DOM
+                if (wasCarnetsHidden) carnetsContainer.classList.add('hidden');
+                if (wasListHidden) listPrintContainer.classList.add('hidden');
+                
+            } catch (error) {
+                console.error("Error al generar PDF:", error);
+                showToast("Error al procesar el PDF. Intente de nuevo.", "error");
+            } finally {
+                applyResponsiveScale();
+                btnDownloadPDF.innerHTML = originalText;
+                btnDownloadPDF.disabled = false;
+                lucide.createIcons();
+            }
+        });
 
         // =========================================================================
         // MOTOR DE RENDERIZADO CARNETS
@@ -686,22 +873,44 @@
                         wrapper.className = 'carnet-wrapper';
                         
                         wrapper.innerHTML = `
-                            <div class="absolute top-0 left-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(-45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 0 100%);"></div>
-                            <div class="absolute top-0 right-0 w-[14mm] h-[14mm] z-0" style="background: repeating-linear-gradient(45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 0, 100% 0, 100% 100%);"></div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="absolute top-0 left-0 w-[14mm] h-[14mm] z-0" viewBox="0 0 14 14">
+                                <defs>
+                                    <pattern id="stripes-tl" width="2" height="2" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                                        <rect width="1" height="2" fill="#7B1220"/>
+                                    </pattern>
+                                </defs>
+                                <polygon points="0,0 14,0 0,14" fill="url(#stripes-tl)"/>
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="absolute top-0 right-0 w-[14mm] h-[14mm] z-0" viewBox="0 0 14 14">
+                                <defs>
+                                    <pattern id="stripes-tr" width="2" height="2" patternTransform="rotate(-45)" patternUnits="userSpaceOnUse">
+                                        <rect width="1" height="2" fill="#7B1220"/>
+                                    </pattern>
+                                </defs>
+                                <polygon points="0,0 14,0 14,14" fill="url(#stripes-tr)"/>
+                            </svg>
                             <div class="absolute bottom-0 left-0 w-[18mm] h-[18mm] z-0 flex">
                                 <div class="absolute bottom-0 left-0 w-[8mm] h-[8mm] bg-[#7B1220]"></div>
-                                <div class="absolute bottom-0 left-[2mm] w-[16mm] h-[16mm]" style="background: repeating-linear-gradient(45deg, transparent, transparent 1mm, #7B1220 1mm, #7B1220 2mm); clip-path: polygon(0 100%, 100% 100%, 0 0);"></div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="absolute bottom-0 left-[2mm] w-[16mm] h-[16mm]" viewBox="0 0 16 16">
+                                    <defs>
+                                        <pattern id="stripes-bl" width="2" height="2" patternTransform="rotate(-45)" patternUnits="userSpaceOnUse">
+                                            <rect width="1" height="2" fill="#7B1220"/>
+                                        </pattern>
+                                    </defs>
+                                    <polygon points="0,16 16,16 0,0" fill="url(#stripes-bl)"/>
+                                </svg>
                             </div>
                             <div class="relative z-10 flex flex-col h-full w-full p-[3mm]">
                                 <div class="flex items-center justify-center w-full mb-[2mm]">
-                                    <h3 class="font-sans font-black uppercase text-[13px] leading-none tracking-tight text-[#7B1220]">COPA CENTRAL: INTERCOLEGIAL</h3>
                                 </div>
                                 <div class="flex flex-1 w-full gap-[2.5mm]">
                                     <div class="w-[30%] aspect-square shrink-0 self-center flex flex-col relative bg-[#7B1220] shadow-[0_3px_5px_rgba(0,0,0,0.5)] overflow-hidden">
                                         <div class="absolute top-0 left-0 w-[150%] h-[150%] bg-gradient-to-br from-black/60 via-transparent to-transparent pointer-events-none -translate-x-[20%] -translate-y-[20%]"></div>
-                                        <div class="absolute -bottom-[8mm] -right-[8mm] w-[22mm] h-[22mm] bg-white transform rotate-45 z-0"></div>
+                                        
+                                        <div class="absolute bottom-0 right-0 w-0 h-0 border-b-[15mm] border-b-white border-l-[15mm] border-l-transparent z-0"></div>
+                                        
                                         <div class="flex-1 w-full flex items-center justify-center relative z-10 pt-[2.5mm] pb-[1mm]">
-                                            <svg viewBox="0 0 100 100" class="w-[85%] h-[85%] overflow-visible">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-[85%] h-[85%] overflow-visible">
                                                 <circle cx="50" cy="50" r="44" fill="none" stroke="white" stroke-width="3"/>
                                                 <circle cx="50" cy="35" r="15" fill="#7B1220" stroke="white" stroke-width="3"/>
                                                 <path d="M 21 78 C 21 55, 79 55, 79 78 C 79 80, 21 80, 21 78 Z" fill="#7B1220" stroke="white" stroke-width="3" stroke-linejoin="round"/>
@@ -713,24 +922,24 @@
                                     </div>
                                     <div class="w-[70%] flex flex-col justify-between h-full space-y-[1.5mm]">
                                         <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
-                                            <div class="bg-[#7B1220] text-white text-[5.5px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">NOMBRE:</div>
-                                            <div class="text-[#7B1220] text-[7px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${displayNombre}</div>
+                                            <div class="bg-[#7B1220] text-white text-[6px] font-bold px-[1.5mm] flex items-center w-[32%] shrink-0 leading-none tracking-tight overflow-hidden">NOMBRE:</div>
+                                            <div class="text-[#7B1220] text-[8.5px] font-black px-[1.5mm] flex items-center truncate w-[68%] leading-tight uppercase">${displayNombre}</div>
                                         </div>
                                         <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
-                                            <div class="bg-[#7B1220] text-white text-[5.5px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">NACIMIENTO:</div>
-                                            <div class="text-[#7B1220] text-[7px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${fechaFormateada}</div>
+                                            <div class="bg-[#7B1220] text-white text-[6px] font-bold px-[1.5mm] flex items-center w-[32%] shrink-0 leading-none tracking-tight overflow-hidden">NACIMIENTO:</div>
+                                            <div class="text-[#7B1220] text-[8.5px] font-black px-[1.5mm] flex items-center truncate w-[68%] leading-tight uppercase">${fechaFormateada}</div>
                                         </div>
                                         <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
-                                            <div class="bg-[#7B1220] text-white text-[5.5px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">D.N.I:</div>
-                                            <div class="text-[#7B1220] text-[7px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${jugador.dni}</div>
+                                            <div class="bg-[#7B1220] text-white text-[6px] font-bold px-[1.5mm] flex items-center w-[32%] shrink-0 leading-none tracking-tight overflow-hidden">D.N.I:</div>
+                                            <div class="text-[#7B1220] text-[8.5px] font-black px-[1.5mm] flex items-center truncate w-[68%] leading-tight uppercase">${jugador.dni}</div>
                                         </div>
                                         <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
-                                            <div class="bg-[#7B1220] text-white text-[5.5px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">COLEGIO:</div>
-                                            <div class="text-[#7B1220] text-[7px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${meta.colegio} - ${jugador.curso}</div>
+                                            <div class="bg-[#7B1220] text-white text-[6px] font-bold px-[1.5mm] flex items-center w-[32%] shrink-0 leading-none tracking-tight overflow-hidden">COLEGIO:</div>
+                                            <div class="text-[#7B1220] text-[8.5px] font-black px-[1.5mm] flex items-center truncate w-[68%] leading-tight uppercase">${meta.colegio} - ${jugador.curso}</div>
                                         </div>
                                         <div class="flex items-stretch bg-white shadow-[0_1.5px_3px_rgba(0,0,0,0.3)] h-full w-full rounded-[1px] overflow-hidden">
-                                            <div class="bg-[#7B1220] text-white text-[5.5px] font-bold px-[1.5mm] flex items-center w-[48%] shrink-0 leading-none tracking-tight overflow-hidden">EQUIPO:</div>
-                                            <div class="text-[#7B1220] text-[7px] font-black px-[1.5mm] flex items-center truncate w-[52%] leading-tight uppercase">${meta.equipo}</div>
+                                            <div class="bg-[#7B1220] text-white text-[6px] font-bold px-[1.5mm] flex items-center w-[32%] shrink-0 leading-none tracking-tight overflow-hidden">EQUIPO:</div>
+                                            <div class="text-[#7B1220] text-[8.5px] font-black px-[1.5mm] flex items-center truncate w-[68%] leading-tight uppercase">${meta.equipo}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -750,12 +959,12 @@
                         const leftCardData = pageData[i]; 
                         const rightCardData = pageData[i + 1]; 
                         if (rightCardData) {
-                            backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
+                            backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper relative"><img src="${URL_REVERSO}" class="absolute inset-0 w-full h-full object-cover" crossorigin="anonymous" /></div>`;
                         } else {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: 1px solid transparent; background: transparent;"></div>`;
                         }
                         if (leftCardData) {
-                            backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper" style="background-image: url('${URL_REVERSO}');"></div>`;
+                            backPageDiv.innerHTML += `<div class="carnet-wrapper reverso-wrapper relative"><img src="${URL_REVERSO}" class="absolute inset-0 w-full h-full object-cover" crossorigin="anonymous" /></div>`;
                         } else {
                             backPageDiv.innerHTML += `<div class="carnet-wrapper" style="border: 1px solid transparent; background: transparent;"></div>`;
                         }
@@ -779,7 +988,7 @@
                                 <img src="${URL_ESCUDO}" class="w-16 h-16 object-contain ${URL_ESCUDO.trim() ? '' : 'hidden'}" />
                                 <div>
                                     <h1 class="text-2xl font-black font-serif uppercase tracking-widest text-cuervo-900">Copa Central</h1>
-                                    <h2 class="text-sm font-bold uppercase tracking-widest text-gray-500">Lista de Buena Fe</h2>
+                                    <h2 class="text-sm font-bold uppercase tracking-widest text-gray-500">Intercolegial - Lista de Buena Fe</h2>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -831,11 +1040,11 @@
                         <div class="text-center w-64">
                             <div class="border-b border-gray-800 w-full mb-2"></div>
                             <p class="text-xs font-bold text-gray-800 uppercase tracking-wide">Firma Delegado Responsable</p>
-                            <p class="text-[10px] text-gray-500 mt-1">Aceptación del Reglamento Gral.</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Aceptación del Reglamento, Bases y Condiciones.</p>
                         </div>
                         <div class="text-center w-64">
                             <div class="border-b border-gray-800 w-full mb-2"></div>
-                            <p class="text-xs font-bold text-gray-800 uppercase tracking-wide">Sello y Autorización C.A.C.N.</p>
+                            <p class="text-xs font-bold text-gray-800 uppercase tracking-wide">Sello y Autorización C.A.C.N.E.</p>
                             <p class="text-[10px] text-gray-500 mt-1">Fiscalización</p>
                         </div>
                     </div>
@@ -851,7 +1060,7 @@
             text += `=================================================\r\n\r\n`;
             
             text += `${metadata.equipo} - ${metadata.colegio}\r\n`;
-            text += `NOMBRE Y APELLIDO;DNI;FECHA NAC.;CURSO\r\n`;
+            text += `N°;NOMBRE Y APELLIDO;DNI;FECHA NAC.;CURSO\r\n`;
             data.forEach(row => {
                 const filaStr = row.isDelegate ? 'DELEGADO' : row.i;
                 text += `${filaStr};${row.nombre};${row.dni};${row.fecha};${row.curso}\r\n`;
@@ -865,7 +1074,6 @@
             const body = encodeURIComponent(plainTextBody);
             window.location.href = `mailto:${CORREO_DESTINATARIO}?subject=${subject}&body=${body}`;
         });
-
     </script>
 </body>
 </html>
